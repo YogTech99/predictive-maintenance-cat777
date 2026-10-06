@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictive Maintenance Dashboard - PPA ADW v27.2</title>
+    <title>Predictive Maintenance Dashboard - PPA ADW v30.0 Precision</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -13,7 +13,7 @@
         .login-wrapper {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(11,15,23,0.88), rgba(11,15,23,0.97)), url('Picture11.jpg') no-repeat center center;
+            background: linear-gradient(rgba(11,15,23,0.48), rgba(11,15,23,0.62)), url('Picture11.jpg') no-repeat center center;
             background-size: cover; z-index: 9999; transition: opacity 0.4s ease, transform 0.4s ease;
         }
         .login-box {
@@ -105,14 +105,14 @@
         .hm-display .ops-tag { color:#94a3b8; font-size:9px; display:block; }
 
         /* GAUGE */
-        /* Gauge: 3-zone color ring (Critical 0-39% red, Caution 40-69% yellow, Normal 70-100% green) */
+        /* Gauge: 3-zone color ring (Critical <30% red, Caution 30-55% yellow, Normal >55% green) */
         .circular-gauge { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0; }
         .circular-gauge::before {
             content:''; position:absolute; width:52px; height:52px; border-radius:50%;
             background: conic-gradient(
-                rgba(244,63,94,0.18)   0% 39%,
-                rgba(245,158,11,0.18)  39% 69%,
-                rgba(16,185,129,0.18)  69% 100%
+                rgba(244,63,94,0.18)   0% 29%,
+                rgba(245,158,11,0.18)  29% 55%,
+                rgba(16,185,129,0.18)  55% 100%
             );
         }
         .circular-gauge::after { content:attr(data-value); width:38px; height:38px; background:#111827; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:white; position:absolute; z-index:2; }
@@ -235,7 +235,25 @@
         }
         .detail-btn:hover { background:rgba(56,189,248,0.25); }
         ::-webkit-scrollbar-thumb { background:#334155; border-radius:10px; }
-    </style>
+    
+/* ═══════════════════════════════════════════════════════════════════════════
+   v30 PRECISION LAYER
+   ═══════════════════════════════════════════════════════════════════════════ */
+.precision-mini {display:flex;align-items:center;gap:5px;margin-top:2px;font-size:8px;color:#64748b;}
+.precision-mini .pchip{padding:2px 6px;border-radius:4px;font-weight:800;border:1px solid rgba(255,255,255,.12);}
+.pchip-high{color:#10b981;background:rgba(16,185,129,.10);border-color:rgba(16,185,129,.28)!important;}
+.pchip-med{color:#f59e0b;background:rgba(245,158,11,.10);border-color:rgba(245,158,11,.28)!important;}
+.pchip-low{color:#94a3b8;background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.22)!important;}
+.precision-panel{margin-top:5px;background:rgba(30,41,59,.48);border:1px solid #334155;border-radius:8px;padding:8px 9px;}
+.precision-title{font-size:9px;font-weight:900;color:#38bdf8;letter-spacing:.35px;text-transform:uppercase;margin-bottom:5px;}
+.precision-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:8px;}
+.precision-grid span:first-child{color:#64748b;}
+.precision-grid span:last-child{color:#e2e8f0;font-weight:800;text-align:right;}
+.precision-note{margin-top:5px;font-size:7.5px;color:#64748b;line-height:1.45;}
+.evidence-good{color:#10b981!important}.evidence-warn{color:#f59e0b!important}.evidence-bad{color:#f43f5e!important}
+.model-audit{font-size:8px;color:#94a3b8;line-height:1.5;margin-top:4px;padding-top:4px;border-top:1px dashed #334155;}
+
+</style>
 </head>
 <body>
 
@@ -257,7 +275,7 @@
         </div>
         <button class="btn-login" onclick="handleLogin()">Sign In — Component Monitoring</button>
         <div class="login-credit">
-            <div class="credit-title">Predictive Maintenance System Transmission</div>
+            <div class="credit-title">Predictive Failure Transmission CAT777</div>
             <div class="credit-author">Development By Handika Yoga Pratama (Plant Engineering)</div>
 
         </div>
@@ -279,7 +297,7 @@
                 </div>
             </div>
             <div class="topbar-title-block">
-                <div class="topbar-title">Predictive Maintenance Index Health Transmission With Dual Regression By Multi-Parameter | Cat 777</div>
+                <div class="topbar-title">Predictive Failure Transmission CAT777</div>
                 <div style="font-size:10px;color:#10b981;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Development By Handika Yoga Pratama (Plant Engineering)</div>
             </div>
             <div class="topbar-right">
@@ -316,11 +334,11 @@
                 <div class="stat-info"><span class="stat-label">New Component</span><span class="stat-val" id="statNew" style="color:#a855f7;">0</span></div>
                 <div class="stat-icon" style="background:#a855f7;"></div>
             </div>
-            <div class="stat-card" style="cursor:pointer;" onclick="toggleBacktestPanel()" title="Klik untuk lihat detail backtest 5 case">
+            <div class="stat-card" style="cursor:pointer;" onclick="toggleBacktestPanel()" title="Klik untuk lihat detail historical calibration 5 case">
                 <div class="stat-info">
-                    <span class="stat-label">Backtest Accuracy</span>
-                    <span class="stat-val" style="color:#10b981;font-size:16px;">99.96%</span>
-                    <span style="font-size:8px;color:#64748b;">MAE≈5h | 5/5 case ✓</span>
+                    <span class="stat-label">Historical Calibration</span>
+                    <span class="stat-val" style="color:#10b981;font-size:16px;">5/5</span>
+                    <span style="font-size:8px;color:#64748b;">5 historical failure cases | calibration only</span>
                 </div>
                 <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#38bdf8);"></div>
             </div>
@@ -328,7 +346,7 @@
         <!-- BACKTEST PANEL (hidden by default) -->
         <div id="backtestPanel" style="display:none;margin:0 22px 8px 22px;background:#111827;border:1px solid #1e293b;border-radius:10px;padding:12px 16px;font-size:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <div style="font-size:11px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;">📊 Backtest Accuracy Report</div>
+                <div style="font-size:11px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;">📊 Historical Calibration Report</div>
                 <button onclick="toggleBacktestPanel()" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);color:#f43f5e;border-radius:5px;padding:2px 8px;font-size:9px;font-weight:800;cursor:pointer;">✕ Tutup</button>
             </div>
             <div style="overflow-x:auto;">
@@ -417,20 +435,20 @@
                 </tbody>
                 <tfoot>
                     <tr style="border-top:1px solid #334155;background:rgba(16,185,129,0.05);">
-                        <td colspan="5" style="padding:6px 8px;font-weight:800;color:#fff;">OVERALL ACCURACY</td>
+                        <td colspan="5" style="padding:6px 8px;font-weight:800;color:#fff;">HISTORICAL CALIBRATION</td>
                         <td style="padding:6px 8px;text-align:center;font-weight:800;color:#10b981;">MAE ≈5h</td>
                         <td colspan="2" style="padding:6px 8px;text-align:center;font-weight:800;color:#10b981;">4/5 sempurna ±0h</td>
                         <td style="padding:6px 8px;text-align:center;font-weight:800;color:#10b981;">5/5 dlm CI</td>
                         <td style="padding:6px 8px;text-align:center;font-weight:800;color:#10b981;">MAE ≈0.2 hari</td>
-                        <td style="padding:6px 8px;text-align:center;"><span style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.5);padding:3px 8px;border-radius:4px;font-size:9px;font-weight:800;">✅ 99.96%</span></td>
+                        <td style="padding:6px 8px;text-align:center;"><span style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.5);padding:3px 8px;border-radius:4px;font-size:9px;font-weight:800;">✅ 5/5</span></td>
                     </tr>
                 </tfoot>
             </table>
             </div>
             <div style="font-size:9px;color:#475569;margin-top:8px;line-height:1.6;">
-                ⓘ Accuracy = 1 – (|Δ HM| / Actual Fail HM). CI = Confidence Interval ±20-25% dari RUL. 
+                ⓘ Historical calibration = 5 failure cases yang pernah dipakai untuk kalibrasi sinyal. Ini BUKAN akurasi generalisasi seluruh fleet. CI = interval ketidakpastian RUL. 
                 "Actual Tgl Masuk" = tanggal unit masuk workshop/perbaikan berdasarkan HM aktual dan jam operasi. 
-                Semua 5 kasus berada <strong style="color:#10b981;">dalam range CI</strong> → prediksi dapat diandalkan untuk scheduling maintenance.
+                Semua 5 kasus historis berada <strong style="color:#10b981;">dalam range CI</strong>. Validasi prospektif fleet tetap harus dikumpulkan dari outcome aktual unit aktif.
             </div>
         </div>
 
@@ -439,7 +457,7 @@
         </div>
 
         <div class="footer" style="height:auto;min-height:33px;padding:5px 22px;">
-            <div>Status: <span>Local Database</span></div>
+            <div>Status: <span>Local Database · Precision Engine v30 · Source: Data_Update_Fix(1).xlsx</span></div>
         </div>
     </div>
 
@@ -600,15 +618,7 @@ function handleLogout() {
     }
 }
 
-const unitList = [
-    "C77052","C77054","C77065","C77050","C77066",
-    "C77068","C577023AMM","C577008AMM","C577030AMM","C577025AMM",
-    "C77053","C577026AMM","C577024AMM","C77049","C77051",
-    "C77067","C577028AMM",
-    "C77023","C77024","C77025","C77026","C77027",
-    "C77028","C77029","C77030","C77031","C77032",
-    "C77033","C77034"
-];
+const unitList = ["C77049","C77050","C77051","C77052","C77053","C77054","C77065","C77066","C77067","C77068","C577008AMM","C577023AMM","C577024AMM","C577025AMM","C577026AMM","C577028AMM","C577030AMM","C77023","C77024","C77025","C77026","C77027","C77028","C77029","C77030","C77031","C77032","C77033","C77034"];
 
 let databaseUnitHistori = {};
 // Per-unit operational hours per day (default 15, user-adjustable)
@@ -700,22 +710,29 @@ function showToast(msg, isError) {
     setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
+const EMBEDDED_MASTER_SOS = {"C77049":[{"hmLive":16031.9,"hm":15515.0,"date":"30/08/2026","p6":677.0,"oks":5.0,"p14":41.0,"fe":5.0,"pqx":0.0,"iso":"17/13","hmInstall":13968.1,"dateInstall":"6/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16031.9,"hm":15008.0,"date":"26/07/2026","p6":1263.0,"oks":7.0,"p14":102.0,"fe":9.0,"pqx":3.0,"iso":"17/14","hmInstall":13968.1,"dateInstall":"6/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16031.9,"hm":14456.0,"date":"20/06/2026","p6":4.471,"oks":7.0,"p14":429.0,"fe":6.0,"pqx":0.0,"iso":"19/16","hmInstall":13968.1,"dateInstall":"6/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16031.9,"hm":13969.0,"date":"05/05/2026","p6":25377.0,"oks":7.0,"p14":2331.0,"fe":13.0,"pqx":23.0,"iso":"22/18","hmInstall":13968.1,"dateInstall":"6/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level C","magPlugRating":"Level C","volOli":140.0,"jamHari":0.0},{"hmLive":16031.9,"hm":13526.0,"date":"26/03/2026","p6":9002.0,"oks":6.0,"p14":241.0,"fe":5.0,"pqx":0.0,"iso":"20/15","hmInstall":13968.1,"dateInstall":"6/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77050":[{"hmLive":15521.8,"hm":15008.0,"date":"29/08/2026","p6":3921.0,"oks":6.0,"p14":613.0,"fe":4.0,"pqx":0.0,"iso":"19/16","hmInstall":12155.3,"dateInstall":"6/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15521.8,"hm":14497.0,"date":"22/07/2026","p6":2480.0,"oks":7.0,"p14":212.0,"fe":4.0,"pqx":1.0,"iso":"18/15","hmInstall":12155.3,"dateInstall":"6/1/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15521.8,"hm":14008.0,"date":"19/06/2026","p6":2558.0,"oks":7.0,"p14":204.0,"fe":8.0,"pqx":0.0,"iso":"19/15","hmInstall":12155.3,"dateInstall":"6/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15521.8,"hm":13486.0,"date":"06/05/2026","p6":9286.0,"oks":7.0,"p14":1040.0,"fe":5.0,"pqx":3.0,"iso":"20/17","hmInstall":12155.3,"dateInstall":"6/1/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15521.8,"hm":12997.0,"date":"24/03/2026","p6":3237.0,"oks":7.0,"p14":204.0,"fe":9.0,"pqx":0.0,"iso":"19/15","hmInstall":12155.3,"dateInstall":"6/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77051":[{"hmLive":15485.2,"hm":15050.0,"date":"4/09/2026","p6":1348.0,"oks":7.0,"p14":171.0,"fe":4.0,"pqx":0.0,"iso":"18/15","hmInstall":14498.9,"dateInstall":"29/7/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15485.2,"hm":14494.0,"date":"29/07/2026","p6":2776.0,"oks":7.0,"p14":294.0,"fe":0.0,"pqx":0.0,"iso":"19/15","hmInstall":14498.9,"dateInstall":"29/7/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15485.2,"hm":13990.0,"date":"21/06/2026","p6":8321.0,"oks":7.0,"p14":1298.0,"fe":3.0,"pqx":0.0,"iso":"20/17","hmInstall":14498.9,"dateInstall":"29/7/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15485.2,"hm":13493.0,"date":"10/05/2026","p6":3931.0,"oks":6.0,"p14":527.0,"fe":3.0,"pqx":0.0,"iso":"19/16","hmInstall":14498.9,"dateInstall":"29/7/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15485.2,"hm":13033.0,"date":"27/03/2025","p6":2144.0,"oks":6.0,"p14":211.0,"fe":3.0,"pqx":0.0,"iso":"18/15","hmInstall":14498.9,"dateInstall":"29/7/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77052":[{"hmLive":15147.8,"hm":14982.0,"date":"23/09/2026","p6":5643.0,"oks":7.0,"p14":3333.0,"fe":2.0,"pqx":1.0,"iso":"20/16","hmInstall":12194.9,"dateInstall":"26/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15147.8,"hm":14596.0,"date":"18/08/2026","p6":2194.0,"oks":7.0,"p14":217.0,"fe":3.0,"pqx":7.0,"iso":"18/15","hmInstall":12194.9,"dateInstall":"26/1/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15147.8,"hm":14019.0,"date":"08/07/2026","p6":4206.0,"oks":6.0,"p14":234.0,"fe":3.0,"pqx":3.0,"iso":"19/15","hmInstall":12194.9,"dateInstall":"26/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15147.8,"hm":13486.0,"date":"30/05/2026","p6":8632.0,"oks":7.0,"p14":522.0,"fe":5.0,"pqx":21.0,"iso":"20/16","hmInstall":12194.9,"dateInstall":"26/1/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15147.8,"hm":12990.0,"date":"13/04/2026","p6":2488.0,"oks":7.0,"p14":264.0,"fe":4.0,"pqx":0.0,"iso":"18/15","hmInstall":12194.9,"dateInstall":"26/1/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77053":[{"hmLive":15347.5,"hm":15043.0,"date":"13/09/2026","p6":4517.0,"oks":7.0,"p14":520.0,"fe":4.0,"pqx":10.0,"iso":"19/16","hmInstall":12879.6,"dateInstall":"29/3/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15347.5,"hm":14476.0,"date":"07/08/2026","p6":2403.0,"oks":7.0,"p14":320.0,"fe":3.0,"pqx":1.0,"iso":"18/15","hmInstall":12879.6,"dateInstall":"29/3/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15347.5,"hm":14002.0,"date":"04/07/2026","p6":3627.0,"oks":8.0,"p14":87.0,"fe":3.0,"pqx":2.0,"iso":"19/14","hmInstall":12879.6,"dateInstall":"29/3/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15347.5,"hm":13483.0,"date":"25/05/2026","p6":3875.0,"oks":7.0,"p14":338.0,"fe":7.0,"pqx":1.0,"iso":"19/16","hmInstall":12879.6,"dateInstall":"29/3/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15347.5,"hm":13013.0,"date":"10/04/2026","p6":24313.0,"oks":6.0,"p14":2756.0,"fe":9.0,"pqx":8.0,"iso":"22/19","hmInstall":12879.6,"dateInstall":"29/3/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77054":[{"hmLive":15956.8,"hm":15527.0,"date":"4/09/2026","p6":5755.0,"oks":7.0,"p14":500.0,"fe":4.0,"pqx":1.0,"iso":"20/16","hmInstall":13889.0,"dateInstall":"8/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15956.8,"hm":15279.0,"date":"20/08/2026","p6":2452.0,"oks":7.0,"p14":290.0,"fe":2.0,"pqx":3.0,"iso":"18/15","hmInstall":13889.0,"dateInstall":"8/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15956.8,"hm":14985.0,"date":"01/08/2026","p6":4281.0,"oks":9.0,"p14":152.0,"fe":6.0,"pqx":70.0,"iso":"19/14","hmInstall":13889.0,"dateInstall":"8/5/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15956.8,"hm":14527.0,"date":"29/06/2026","p6":4159.0,"oks":8.0,"p14":361.0,"fe":4.0,"pqx":0.0,"iso":"19/16","hmInstall":13889.0,"dateInstall":"8/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15956.8,"hm":14020.0,"date":"20/05/2025","p6":4405.0,"oks":6.0,"p14":248.0,"fe":4.0,"pqx":3.0,"iso":"19/15","hmInstall":13889.0,"dateInstall":"8/5/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77065":[{"hmLive":14797.8,"hm":14545.0,"date":"18/09/2026","p6":2952.0,"oks":7.0,"p14":351.0,"fe":5.0,"pqx":1.0,"iso":"19/16","hmInstall":8311.3,"dateInstall":"15/4/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14797.8,"hm":14032.0,"date":"14/08/2026","p6":2571.0,"oks":7.0,"p14":123.0,"fe":6.0,"pqx":0.0,"iso":"19/14","hmInstall":8311.3,"dateInstall":"15/4/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14797.8,"hm":13557.0,"date":"11/07/2026","p6":4002.0,"oks":7.0,"p14":117.0,"fe":5.0,"pqx":0.0,"iso":"19/14","hmInstall":8311.3,"dateInstall":"15/4/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14797.8,"hm":13055.0,"date":"07/06/2026","p6":738.0,"oks":7.0,"p14":56.0,"fe":3.0,"pqx":3.0,"iso":"17/13","hmInstall":8311.3,"dateInstall":"15/4/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14797.8,"hm":12497.0,"date":"20/04/2026","p6":2774.0,"oks":7.0,"p14":256.0,"fe":5.0,"pqx":1.0,"iso":"19/15","hmInstall":8311.3,"dateInstall":"15/4/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77066":[{"hmLive":14787.4,"hm":14516.0,"date":"17/09/2026","p6":3582.0,"oks":7.0,"p14":401.0,"fe":2.0,"pqx":8.0,"iso":"19/16","hmInstall":8219.8,"dateInstall":"21/03/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14787.4,"hm":13976.0,"date":"11/08/2026","p6":1488.0,"oks":7.0,"p14":77.0,"fe":3.0,"pqx":1.0,"iso":"18/13","hmInstall":8219.8,"dateInstall":"21/03/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14787.4,"hm":13541.0,"date":"12/07/2026","p6":3687.0,"oks":7.0,"p14":123.0,"fe":5.0,"pqx":2.0,"iso":"19/14","hmInstall":8219.8,"dateInstall":"21/03/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14787.4,"hm":12998.0,"date":"04/06/2026","p6":1298.0,"oks":7.0,"p14":60.0,"fe":3.0,"pqx":0.0,"iso":"17/13","hmInstall":8219.8,"dateInstall":"21/03/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":14787.4,"hm":12474.0,"date":"16/04/2026","p6":3687.0,"oks":7.0,"p14":464.0,"fe":3.0,"pqx":15.0,"iso":"19/16","hmInstall":8219.8,"dateInstall":"21/03/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77067":[{"hmLive":15272.7,"hm":15016.0,"date":"16/09/2026","p6":8828.0,"oks":6.0,"p14":224.0,"fe":3.0,"pqx":0.0,"iso":"20/15","hmInstall":13792.0,"dateInstall":"23/6/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15272.7,"hm":14573.0,"date":"15/08/2026","p6":5241.0,"oks":7.0,"p14":303.0,"fe":4.0,"pqx":0.0,"iso":"20/15","hmInstall":13792.0,"dateInstall":"23/6/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15272.7,"hm":14020.0,"date":"09/07/2026","p6":6096.0,"oks":6.0,"p14":462.0,"fe":7.0,"pqx":0.0,"iso":"20/16","hmInstall":13792.0,"dateInstall":"23/6/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15272.7,"hm":13516.0,"date":"03/06/2026","p6":9682.0,"oks":7.0,"p14":1236.0,"fe":3.0,"pqx":1.0,"iso":"20/17","hmInstall":13792.0,"dateInstall":"23/6/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15272.7,"hm":12985.0,"date":"18/04/2026","p6":7397.0,"oks":8.0,"p14":733.0,"fe":3.0,"pqx":4.0,"iso":"20/17","hmInstall":13792.0,"dateInstall":"23/6/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77068":[{"hmLive":15251.0,"hm":15004.0,"date":"18/09/2026","p6":3810.0,"oks":8.0,"p14":336.0,"fe":5.0,"pqx":1.0,"iso":"19/16","hmInstall":14785.1,"dateInstall":"02/09/2026","topup":0.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15251.0,"hm":14539.0,"date":"15/08/2026","p6":3441.0,"oks":7.0,"p14":591.0,"fe":2.0,"pqx":0.0,"iso":"19/16","hmInstall":14785.1,"dateInstall":"02/09/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15251.0,"hm":14051.0,"date":"13/07/2026","p6":7534.0,"oks":7.0,"p14":578.0,"fe":3.0,"pqx":0.0,"iso":"20/16","hmInstall":14785.1,"dateInstall":"02/09/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15251.0,"hm":13508.0,"date":"05/06/2026","p6":1900.0,"oks":7.0,"p14":58.0,"fe":2.0,"pqx":0.0,"iso":"18/13","hmInstall":14785.1,"dateInstall":"02/09/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15251.0,"hm":13013.0,"date":"24/04/2026","p6":2655.0,"oks":7.0,"p14":302.0,"fe":5.0,"pqx":0.0,"iso":"19/15","hmInstall":14785.1,"dateInstall":"02/09/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577008AMM":[{"hmLive":17093.5,"hm":16986.0,"date":"28/09/2026","p6":1306.0,"oks":7.0,"p14":129.0,"fe":2.0,"pqx":4.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17093.5,"hm":16565.0,"date":"01/09/2026","p6":1399.0,"oks":7.0,"p14":235.0,"fe":2.0,"pqx":3.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17093.5,"hm":16007.0,"date":"26/07/2026","p6":2388.0,"oks":8.0,"p14":201.0,"fe":3.0,"pqx":0.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17093.5,"hm":15536.0,"date":"23/06/2026","p6":808.0,"oks":6.0,"p14":49.0,"fe":2.0,"pqx":5.0,"iso":"17/13","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17093.5,"hm":14973.0,"date":"06/05/2026","p6":1124.0,"oks":7.0,"p14":131.0,"fe":1.0,"pqx":0.0,"iso":"17/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577023AMM":[{"hmLive":19340.6,"hm":19003.0,"date":"09/092026","p6":1698.0,"oks":7.0,"p14":286.0,"fe":5.0,"pqx":0.0,"iso":"18/15","hmInstall":17509.3,"dateInstall":"20/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19340.6,"hm":18498.0,"date":"05/08/2026","p6":4705.0,"oks":7.0,"p14":278.0,"fe":5.0,"pqx":0.0,"iso":"19/15","hmInstall":17509.3,"dateInstall":"20/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19340.6,"hm":17982.0,"date":"30/06/2026","p6":7837.0,"oks":7.0,"p14":141.0,"fe":10.0,"pqx":0.0,"iso":"20/14","hmInstall":17509.3,"dateInstall":"20/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19340.6,"hm":17944.0,"date":"27/06/2026","p6":1317.0,"oks":5.0,"p14":88.0,"fe":6.0,"pqx":1.0,"iso":"18/14","hmInstall":17509.3,"dateInstall":"20/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19340.6,"hm":17509.0,"date":"19/05/2026","p6":2902.0,"oks":7.0,"p14":498.0,"fe":10.0,"pqx":3.0,"iso":"19/16","hmInstall":17509.3,"dateInstall":"20/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577024AMM":[{"hmLive":18884.4,"hm":18512.0,"date":"10/9/2026","p6":4055.0,"oks":6.0,"p14":169.0,"fe":7.0,"pqx":0.0,"iso":"19/15","hmInstall":12023.9,"dateInstall":"23/2/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":18884.4,"hm":17983.0,"date":"4/8/2026","p6":4107.0,"oks":7.0,"p14":509.0,"fe":5.0,"pqx":1.0,"iso":"19/16","hmInstall":12023.9,"dateInstall":"23/2/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":18884.4,"hm":17518.0,"date":"1/7/2026","p6":4878.0,"oks":7.0,"p14":47.0,"fe":4.0,"pqx":2.0,"iso":"19/13","hmInstall":12023.9,"dateInstall":"23/2/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":18884.4,"hm":16992.0,"date":"15/5/2026","p6":1598.0,"oks":6.0,"p14":109.0,"fe":7.0,"pqx":0.0,"iso":"18/14","hmInstall":12023.9,"dateInstall":"23/2/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":18884.4,"hm":16066.0,"date":"19/01/2026","p6":2820.0,"oks":7.0,"p14":256.0,"fe":6.0,"pqx":1.0,"iso":"19/15","hmInstall":12023.9,"dateInstall":"23/2/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577025AMM":[{"hmLive":19184.0,"hm":19004.0,"date":"23/09/2026","p6":9651.0,"oks":7.0,"p14":606.0,"fe":3.0,"pqx":3.0,"iso":"20/16","hmInstall":12990.0,"dateInstall":"6/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19184.0,"hm":18495.0,"date":"21/08/2026","p6":12906.0,"oks":8.0,"p14":642.0,"fe":2.0,"pqx":0.0,"iso":"21/17","hmInstall":12990.0,"dateInstall":"6/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19184.0,"hm":18025.0,"date":"10/07/2026","p6":3185.0,"oks":6.0,"p14":61.0,"fe":2.0,"pqx":2.0,"iso":"19/13","hmInstall":12990.0,"dateInstall":"6/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19184.0,"hm":17523.0,"date":"2/06/2026","p6":3127.0,"oks":7.0,"p14":405.0,"fe":3.0,"pqx":0.0,"iso":"19/16","hmInstall":12990.0,"dateInstall":"6/05/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19184.0,"hm":16966.0,"date":"14/04/2026","p6":2559.0,"oks":7.0,"p14":500.0,"fe":4.0,"pqx":2.0,"iso":"19/16","hmInstall":12990.0,"dateInstall":"6/05/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577026AMM":[{"hmLive":19797.9,"hm":19538.0,"date":"14/9/2026","p6":3648.0,"oks":7.0,"p14":224.0,"fe":6.0,"pqx":2.0,"iso":"19/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19797.9,"hm":19006.0,"date":"5/8/2026","p6":5418.0,"oks":7.0,"p14":814.0,"fe":7.0,"pqx":0.0,"iso":"20/17","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19797.9,"hm":18516.0,"date":"30/6/2026","p6":8602.0,"oks":7.0,"p14":464.0,"fe":5.0,"pqx":1.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19797.9,"hm":18000.0,"date":"19/5/2026","p6":6059.0,"oks":6.0,"p14":471.0,"fe":5.0,"pqx":0.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19797.9,"hm":17502.0,"date":"24/03/2026","p6":7078.0,"oks":6.0,"p14":640.0,"fe":4.0,"pqx":0.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577028AMM":[{"hmLive":15231.0,"hm":15007.0,"date":"16/09/2026","p6":3417.0,"oks":6.0,"p14":246.0,"fe":4.0,"pqx":1.0,"iso":"19/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15231.0,"hm":14507.0,"date":"11/08/2026","p6":1389.0,"oks":6.0,"p14":60.0,"fe":4.0,"pqx":1.0,"iso":"18/13","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15231.0,"hm":13969.0,"date":"4/7/2026","p6":3294.0,"oks":7.0,"p14":94.0,"fe":3.0,"pqx":0.0,"iso":"19/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15231.0,"hm":13500.0,"date":"28/05/2026","p6":6341.0,"oks":6.0,"p14":359.0,"fe":3.0,"pqx":0.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15231.0,"hm":13042.0,"date":"11/04/2026","p6":3450.0,"oks":7.0,"p14":366.0,"fe":5.0,"pqx":0.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C577030AMM":[{"hmLive":19066.5,"hm":18992.0,"date":"29/09/2026","p6":5710.0,"oks":7.0,"p14":318.0,"fe":9.0,"pqx":0.0,"iso":"20/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19066.5,"hm":18515.0,"date":"26/08/2026","p6":8598.0,"oks":7.0,"p14":339.0,"fe":4.0,"pqx":5.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19066.5,"hm":17996.0,"date":"23/07/2026","p6":2708.0,"oks":7.0,"p14":192.0,"fe":3.0,"pqx":0.0,"iso":"19/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19066.5,"hm":17533.0,"date":"17/06/2026","p6":1475.0,"oks":6.0,"p14":66.0,"fe":3.0,"pqx":1.0,"iso":"18/13","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":19066.5,"hm":16955.0,"date":"17/04/2026","p6":5118.0,"oks":5.0,"p14":813.0,"fe":7.0,"pqx":7.0,"iso":"20/17","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77023":[{"hmLive":16462.5,"hm":16034.0,"date":"04/09/2026","p6":5702.0,"oks":7.0,"p14":380.0,"fe":3.0,"pqx":3.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16462.5,"hm":15498.0,"date":"20/07/2026","p6":1320.0,"oks":7.0,"p14":114.0,"fe":8.0,"pqx":0.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16462.5,"hm":15023.0,"date":"17/06/2026","p6":1846.0,"oks":7.0,"p14":176.0,"fe":5.0,"pqx":3.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16462.5,"hm":14504.0,"date":"28/04/2026","p6":2476.0,"oks":8.0,"p14":317.0,"fe":3.0,"pqx":0.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16462.5,"hm":14026.0,"date":"12/03/2026","p6":2912.0,"oks":7.0,"p14":411.0,"fe":7.0,"pqx":1.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77024":[{"hmLive":16767.7,"hm":16503.0,"date":"17/09/2026","p6":3338.0,"oks":7.0,"p14":467.0,"fe":2.0,"pqx":1.0,"iso":"19/16","hmInstall":12211.1,"dateInstall":"14/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16767.7,"hm":16041.0,"date":"15/08/2026","p6":2293.0,"oks":6.0,"p14":178.0,"fe":3.0,"pqx":3.0,"iso":"18/15","hmInstall":12211.1,"dateInstall":"14/9/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16767.7,"hm":15532.0,"date":"11/07/2026","p6":8605.0,"oks":6.0,"p14":569.0,"fe":2.0,"pqx":5.0,"iso":"20/16","hmInstall":12211.1,"dateInstall":"14/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16767.7,"hm":15009.0,"date":"3/6/2026","p6":3296.0,"oks":7.0,"p14":344.0,"fe":5.0,"pqx":0.0,"iso":"19/16","hmInstall":12211.1,"dateInstall":"14/9/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16767.7,"hm":14493.0,"date":"9/4/2026","p6":1550.0,"oks":7.0,"p14":120.0,"fe":3.0,"pqx":7.0,"iso":"18/14","hmInstall":12211.1,"dateInstall":"14/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77025":[{"hmLive":16926.5,"hm":16565.0,"date":"15/09/2026","p6":1279.0,"oks":7.0,"p14":117.0,"fe":3.0,"pqx":2.0,"iso":"17/14","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16926.5,"hm":16029.0,"date":"12/08/2026","p6":3041.0,"oks":7.0,"p14":183.0,"fe":4.0,"pqx":0.0,"iso":"19/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16926.5,"hm":15527.0,"date":"10/07/2026","p6":5729.0,"oks":6.0,"p14":520.0,"fe":2.0,"pqx":6.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16926.5,"hm":14985.0,"date":"04/06/2026","p6":3422.0,"oks":7.0,"p14":157.0,"fe":6.0,"pqx":1.0,"iso":"19/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16926.5,"hm":14491.0,"date":"22/04/2026","p6":1879.0,"oks":7.0,"p14":200.0,"fe":3.0,"pqx":0.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77026":[{"hmLive":16179.9,"hm":15996.0,"date":"22/09/2026","p6":6957.0,"oks":7.0,"p14":336.0,"fe":2.0,"pqx":38.0,"iso":"20/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16179.9,"hm":15529.0,"date":"23/08/2026","p6":4142.0,"oks":7.0,"p14":472.0,"fe":3.0,"pqx":3.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16179.9,"hm":15009.0,"date":"17/07/2026","p6":3114.0,"oks":8.0,"p14":199.0,"fe":5.0,"pqx":0.0,"iso":"19/15","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16179.9,"hm":14496.0,"date":"10/6/2026","p6":5235.0,"oks":7.0,"p14":1047.0,"fe":3.0,"pqx":4.0,"iso":"20/17","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16179.9,"hm":14001.0,"date":"25/4/2026","p6":1460.0,"oks":7.0,"p14":105.0,"fe":5.0,"pqx":0.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77027":[{"hmLive":16539.3,"hm":16020.0,"date":"31/08/2026","p6":2276.0,"oks":5.0,"p14":126.0,"fe":5.0,"pqx":4.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16539.3,"hm":15483.0,"date":"23/07/2026","p6":1702.0,"oks":7.0,"p14":195.0,"fe":3.0,"pqx":0.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16539.3,"hm":15015.0,"date":"18/06/2026","p6":3201.0,"oks":6.0,"p14":327.0,"fe":4.0,"pqx":0.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16539.3,"hm":14491.0,"date":"6/05/2026","p6":1993.0,"oks":7.0,"p14":192.0,"fe":3.0,"pqx":3.0,"iso":"18/15","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16539.3,"hm":14001.0,"date":"15/03/2026","p6":3982.0,"oks":7.0,"p14":499.0,"fe":5.0,"pqx":3.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77028":[{"hmLive":17080.2,"hm":17002.0,"date":"30/09/2026","p6":2752.0,"oks":7.0,"p14":278.0,"fe":6.0,"pqx":3.0,"iso":"19/15","hmInstall":15231.2,"dateInstall":"21/5/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17080.2,"hm":16519.0,"date":"27/08/2026","p6":3759.0,"oks":7.0,"p14":532.0,"fe":6.0,"pqx":26.0,"iso":"19/16","hmInstall":15231.2,"dateInstall":"21/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17080.2,"hm":15998.0,"date":"19/07/2026","p6":7269.0,"oks":7.0,"p14":178.0,"fe":14.0,"pqx":50.0,"iso":"20/15","hmInstall":15231.2,"dateInstall":"21/5/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17080.2,"hm":15522.0,"date":"16/6/2026","p6":4334.0,"oks":7.0,"p14":217.0,"fe":8.0,"pqx":5.0,"iso":"19/15","hmInstall":15231.2,"dateInstall":"21/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17080.2,"hm":15442.0,"date":"9/6/2026","p6":2689.0,"oks":7.0,"p14":286.0,"fe":6.0,"pqx":4.0,"iso":"19/15","hmInstall":15231.2,"dateInstall":"21/5/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77029":[{"hmLive":16388.8,"hm":16049.0,"date":"12/09/2026","p6":8968.0,"oks":7.0,"p14":1229.0,"fe":4.0,"pqx":0.0,"iso":"20/17","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16388.8,"hm":15518.0,"date":"6/08/2026","p6":10565.0,"oks":7.0,"p14":1631.0,"fe":3.0,"pqx":0.0,"iso":"21/18","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16388.8,"hm":15003.0,"date":"3/07/2026","p6":8640.0,"oks":6.0,"p14":1195.0,"fe":6.0,"pqx":1.0,"iso":"20/17","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16388.8,"hm":14508.0,"date":"24/05/2026","p6":3992.0,"oks":6.0,"p14":556.0,"fe":4.0,"pqx":4.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16388.8,"hm":13999.0,"date":"8/04/2026","p6":2532.0,"oks":7.0,"p14":430.0,"fe":5.0,"pqx":8.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77030":[{"hmLive":17328.5,"hm":17037.0,"date":"16/09/2026","p6":3474.0,"oks":7.0,"p14":406.0,"fe":8.0,"pqx":2.0,"iso":"19/16","hmInstall":13464.6,"dateInstall":"25/11/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17328.5,"hm":16600.0,"date":"17/08/2026","p6":2733.0,"oks":7.0,"p14":436.0,"fe":5.0,"pqx":3.0,"iso":"19/16","hmInstall":13464.6,"dateInstall":"25/11/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17328.5,"hm":16016.0,"date":"9/07/2026","p6":3096.0,"oks":6.0,"p14":311.0,"fe":6.0,"pqx":5.0,"iso":"19/15","hmInstall":13464.6,"dateInstall":"25/11/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17328.5,"hm":15498.0,"date":"30/5/2026","p6":2799.0,"oks":7.0,"p14":179.0,"fe":5.0,"pqx":2.0,"iso":"19/15","hmInstall":13464.6,"dateInstall":"25/11/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17328.5,"hm":14980.0,"date":"17/4/2026","p6":1432.0,"oks":8.0,"p14":84.0,"fe":6.0,"pqx":9.0,"iso":"18/14","hmInstall":13464.6,"dateInstall":"25/11/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77031":[{"hmLive":17585.6,"hm":17495.0,"date":"28/09/2026","p6":2836.0,"oks":7.0,"p14":378.0,"fe":4.0,"pqx":0.0,"iso":"19/16","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17585.6,"hm":17020.0,"date":"27/08/2026","p6":1037.0,"oks":7.0,"p14":80.0,"fe":6.0,"pqx":1.0,"iso":"17/13","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17585.6,"hm":16494.0,"date":"22/07/2026","p6":828.0,"oks":7.0,"p14":79.0,"fe":3.0,"pqx":0.0,"iso":"17/13","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17585.6,"hm":16005.0,"date":"20/06/2026","p6":1520.0,"oks":8.0,"p14":95.0,"fe":6.0,"pqx":0.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":17585.6,"hm":15502.0,"date":"7/05/2026","p6":1601.0,"oks":6.0,"p14":141.0,"fe":4.0,"pqx":0.0,"iso":"18/14","hmInstall":0.0,"dateInstall":"0","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77032":[{"hmLive":16856.4,"hm":16544.0,"date":"14/09/2026","p6":1468.0,"oks":7.0,"p14":165.0,"fe":2.0,"pqx":0.0,"iso":"18/15","hmInstall":15648.0,"dateInstall":"8/7/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16856.4,"hm":16103.0,"date":"12/08/2026","p6":3594.0,"oks":8.0,"p14":436.0,"fe":3.0,"pqx":1.0,"iso":"19/16","hmInstall":15648.0,"dateInstall":"8/7/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16856.4,"hm":15998.0,"date":"4/08/2026","p6":8559.0,"oks":7.0,"p14":828.0,"fe":10.0,"pqx":0.0,"iso":"20/17","hmInstall":15648.0,"dateInstall":"8/7/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16856.4,"hm":15496.0,"date":"26/6/2026","p6":3463.0,"oks":7.0,"p14":326.0,"fe":3.0,"pqx":6.0,"iso":"19/16","hmInstall":15648.0,"dateInstall":"8/7/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16856.4,"hm":15000.0,"date":"13/5/2026","p6":3396.0,"oks":6.0,"p14":244.0,"fe":3.0,"pqx":0.0,"iso":"19/15","hmInstall":15648.0,"dateInstall":"8/7/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77033":[{"hmLive":15914.8,"hm":15542.0,"date":"11/09/2026","p6":1451.0,"oks":7.0,"p14":141.0,"fe":3.0,"pqx":1.0,"iso":"18/14","hmInstall":11267.1,"dateInstall":"23/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15914.8,"hm":15043.0,"date":"11/08/2026","p6":2143.0,"oks":7.0,"p14":88.0,"fe":5.0,"pqx":1.0,"iso":"18/14","hmInstall":11267.1,"dateInstall":"23/9/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15914.8,"hm":14510.0,"date":"4/07/2026","p6":2312.0,"oks":7.0,"p14":311.0,"fe":3.0,"pqx":3.0,"iso":"18/15","hmInstall":11267.1,"dateInstall":"23/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15914.8,"hm":13991.0,"date":"26/05/2026","p6":1569.0,"oks":6.0,"p14":172.0,"fe":6.0,"pqx":6.0,"iso":"18/15","hmInstall":11267.1,"dateInstall":"23/9/2025","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":15914.8,"hm":13502.0,"date":"14/04/2026","p6":1569.0,"oks":7.0,"p14":172.0,"fe":4.0,"pqx":25.0,"iso":"18/15","hmInstall":11267.1,"dateInstall":"23/9/2025","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}],"C77034":[{"hmLive":16353.0,"hm":16034.0,"date":"9/09/2026","p6":33354.0,"oks":7.0,"p14":180.0,"fe":9.0,"pqx":173.0,"iso":"22/15","hmInstall":16033.8,"dateInstall":"13/9/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16353.0,"hm":15563.0,"date":"6/08/2026","p6":5801.0,"oks":7.0,"p14":825.0,"fe":4.0,"pqx":0.0,"iso":"20/17","hmInstall":16033.8,"dateInstall":"13/9/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16353.0,"hm":15029.0,"date":"2/07/2026","p6":12988.0,"oks":7.0,"p14":541.0,"fe":6.0,"pqx":7.0,"iso":"21/16","hmInstall":16033.8,"dateInstall":"13/9/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16353.0,"hm":14517.0,"date":"23/5/2026","p6":13453.0,"oks":6.0,"p14":518.0,"fe":6.0,"pqx":0.0,"iso":"21/16","hmInstall":16033.8,"dateInstall":"13/9/2026","topup":0.0,"jenisTopup":"None","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0},{"hmLive":16353.0,"hm":14032.0,"date":"9/4/2026","p6":2846.0,"oks":7.0,"p14":347.0,"fe":5.0,"pqx":6.0,"iso":"19/16","hmInstall":16033.8,"dateInstall":"13/9/2026","topup":140.0,"jenisTopup":"Scheduled","filterRating":"Level A","magPlugRating":"Level A","volOli":140.0,"jamHari":0.0}]};
 function loadDatabaseDariStorage() {
-    let saved = localStorage.getItem('database_sos_v11');
-    let savedJam = localStorage.getItem('unit_jam_hari_v11');
+    // v30 storage key sengaja dibedakan agar cache versi lama tidak membawa
+    // threshold/model lama ke engine baru. Default = master Excel terbaru yang
+    // dibenamkan saat build dari Data_Update_Fix(1).xlsx.
+    let saved = localStorage.getItem('database_sos_v31');
+    let savedJam = localStorage.getItem('unit_jam_hari_v31');
     if(saved) {
-        databaseUnitHistori = JSON.parse(saved);
-        unitList.forEach(u => { if(!databaseUnitHistori[u]) inisialisasiUnitDefault(u); });
-    } else {
-        unitList.forEach(u => inisialisasiUnitDefault(u));
-        simpanKeStorage();
+        try { databaseUnitHistori = JSON.parse(saved); } catch(e) { databaseUnitHistori = {}; }
     }
-    if(savedJam) unitJamHari = JSON.parse(savedJam);
+    unitList.forEach(u => {
+        if(!databaseUnitHistori[u] || !databaseUnitHistori[u].length) {
+            if(EMBEDDED_MASTER_SOS[u]) databaseUnitHistori[u]=JSON.parse(JSON.stringify(EMBEDDED_MASTER_SOS[u]));
+            else inisialisasiUnitDefault(u);
+        }
+    });
+    if(savedJam) { try { unitJamHari = JSON.parse(savedJam); } catch(e) { unitJamHari={}; } }
+    simpanKeStorage();
 }
 
 function simpanKeStorage() {
-    localStorage.setItem('database_sos_v11', JSON.stringify(databaseUnitHistori));
-    localStorage.setItem('unit_jam_hari_v11', JSON.stringify(unitJamHari));
+    localStorage.setItem('database_sos_v31', JSON.stringify(databaseUnitHistori));
+    localStorage.setItem('unit_jam_hari_v31', JSON.stringify(unitJamHari));
 }
 
 // ─── JAM OPERASI HARIAN — AUTO-CALC dari selisih HM & tanggal sampling ────────
@@ -1255,33 +1272,32 @@ function analisaTrend(t0, t1, t2, vol) {
 // tidak salah dibaca sebagai keausan mekanis (false alarm prevention)
 
 function getThreshold(age) {
-    // ── Baseline threshold dari 8 case failure aktual ────────────────────────
-    // Stage 1: 0–6000h (unit relatif baru)
-    if(age < 6000) return {
-        feCrit:15,  feWarn:8,      // Fe: Normal ≤7, Caution 8–14, Critical ≥15
-        p6Crit:12000, p6Warn:4000, // P6µ: Normal ≤4000, Caution 4001–12000, Critical ≥12000
-        oksCrit:8,  oksWarn:5,     // Oxidation: Normal 0–4, Caution 5–7, Critical ≥8
-        p14Crit:400, p14Warn:80,   // P14µ: Normal <80, Caution 81–400, Critical ≥400
-        pqxCrit:6,  pqxWarn:4,     // PQX: Normal ≤3, Caution 4–5, Critical ≥6
-        isoWarn:20, isoCrit:22     // ISO: Normal ≤18, Caution 19–20, Critical ≥22
-    };
-    // Stage 2: 6000–12000h (unit pertengahan umur — threshold diperketat 10%)
-    if(age < 12000) return {
-        feCrit:13,  feWarn:7,
-        p6Crit:10000, p6Warn:3500,
-        oksCrit:8,  oksWarn:5,
-        p14Crit:350, p14Warn:70,
-        pqxCrit:5,  pqxWarn:3,
+    // v30: SOURCE-ALIGNED WEAR LIMITS
+    // Basis: Sheet "PANDUAN & WEAR LIMIT" pada Data_Update_Fix(1).xlsx.
+    // Baseline: P6 4k/7k, Ox 5/8, P14 300/450, Fe 6/13, PQX 10/20, ISO 20/22.
+    // Age adaptation dibuat MILD dan TIDAK boleh menurunkan PQX/oxidation/ISO
+    // critical threshold secara agresif seperti versi lama (mis. PQX=5 pada
+    // transmisi tua). Tujuannya mencegah satu parameter oil-analysis menjadi
+    // false-critical hanya karena umur komponen.
+    const base = {
+        feWarn:6, feCrit:13,
+        p6Warn:4000, p6Crit:7000,
+        oksWarn:5, oksCrit:8,
+        p14Warn:300, p14Crit:450,
+        pqxWarn:10, pqxCrit:20,
         isoWarn:20, isoCrit:22
     };
-    // Stage 3: >12000h (unit tua — threshold diperketat 20%, lebih sensitif)
+    const a = Number(age)||0;
+    let tight = a >= 12000 ? 0.90 : (a >= 6000 ? 0.95 : 1.0);
+    // Untuk P6/Fe/P14, umur boleh sedikit memperketat threshold.
+    // Ox/PQX/ISO tetap mengikuti wear limit source agar tidak over-sensitive.
     return {
-        feCrit:11,  feWarn:6,
-        p6Crit:8000, p6Warn:3000,
-        oksCrit:7,  oksWarn:4,
-        p14Crit:300, p14Warn:60,
-        pqxCrit:5,  pqxWarn:3,
-        isoWarn:19, isoCrit:22
+        feCrit: base.feCrit*tight, feWarn: base.feWarn*(a>=12000?0.95:(a>=6000?0.98:1)),
+        p6Crit: base.p6Crit*tight, p6Warn: base.p6Warn*(a>=12000?0.95:(a>=6000?0.98:1)),
+        oksCrit: base.oksCrit, oksWarn: base.oksWarn,
+        p14Crit: base.p14Crit*tight, p14Warn: base.p14Warn*(a>=12000?0.95:(a>=6000?0.98:1)),
+        pqxCrit: base.pqxCrit, pqxWarn: base.pqxWarn,
+        isoWarn: base.isoWarn, isoCrit: base.isoCrit
     };
 }
 
@@ -1319,6 +1335,225 @@ function getOilAgeWarningNote(oilAge) {
 }
 
 // ─── MAIN ANALYSIS ENGINE ─────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRECISION ENGINE v30.0
+// Prinsip:
+// 1) threshold mengikuti wear-limit workbook, bukan age-adaptive ekstrem;
+// 2) regresi tidak boleh menghasilkan RUL=0 jika nilai aktual masih < threshold;
+// 3) local slope + regression slope dibandingkan;
+// 4) persistence + trend consistency + cross-parameter confirmation menjadi
+//    confidence, bukan langsung dipaksa menjadi RUL;
+// 5) parameter dengan confidence rendah tidak boleh sendirian mematikan RUL;
+// 6) oxidation = oil-quality evidence, bukan mechanical-RUL driver utama.
+// ═══════════════════════════════════════════════════════════════════════════
+const PRECISION_V30 = {
+    fallbackRUL: 5000,
+    maxRUL: 5000,
+    minConfidenceForRUL: 0.45,
+    strongConfidence: 0.65,
+    overrideRatio: 0.45
+};
+
+function medianNum(arr){
+    const a=arr.filter(Number.isFinite).slice().sort((x,y)=>x-y);
+    if(!a.length) return 0;
+    const m=Math.floor(a.length/2);
+    return a.length%2?a[m]:(a[m-1]+a[m])/2;
+}
+
+function clamp01(v){ return Math.max(0,Math.min(1,Number.isFinite(v)?v:0)); }
+
+function precisionSeries(histori,param,vol){
+    const arr=(histori||[]).filter(Boolean).map(h=>({
+        hm:Number(h.hm)||0,
+        v:koreksiDilusi(Number(h[param])||0,h.topup,vol),
+        date:h.date||''
+    })).filter(x=>x.hm>0).sort((a,b)=>b.hm-a.hm);
+    const slopes=[];
+    for(let i=0;i<arr.length-1;i++){
+        const dx=arr[i].hm-arr[i+1].hm;
+        if(dx>0) slopes.push((arr[i].v-arr[i+1].v)/dx);
+    }
+    return {arr,slopes};
+}
+
+function precisionParamForecast(histori,param,vol,warnThreshold,threshold,fit){
+    const s=precisionSeries(histori,param,vol);
+    const arr=s.arr, slopes=s.slopes;
+    const current=arr.length?arr[0].v:0;
+    const n=arr.length;
+    const persistenceCount=arr.length?arr.filter(x=>x.v>=warnThreshold).length:0;
+    const persistenceScore=arr.length?Math.min(1,persistenceCount/Math.min(3,arr.length)):0;
+    const positive=slopes.filter(v=>v>0);
+    const negative=slopes.filter(v=>v<0);
+    const latestSlope=slopes.length && slopes[0]>0 ? slopes[0] : 0;
+    const medSlope=positive.length?medianNum(positive):0;
+    // Weighted recent slope: newest interval has the highest weight.
+    let ws=0,ww=0;
+    slopes.forEach((v,i)=>{
+        if(v>0){ const w=Math.pow(0.55,i); ws+=v*w; ww+=w; }
+    });
+    const weightedSlope=ww?ws/ww:0;
+    const regSlope=(fit && fit.model==='exponential' && fit.a && fit.b && arr.length)
+        ? Math.max(0,fit.a*fit.b*Math.exp(fit.b*arr[0].hm))
+        : Math.max(0,fit?.slope||0);
+
+    const localSlope = weightedSlope>0 ? (latestSlope>0 ? latestSlope*0.60+weightedSlope*0.40 : weightedSlope) : medSlope;
+    const slopeForRUL = localSlope>0 ? (regSlope>0 ? localSlope*0.70+regSlope*0.30 : localSlope) : 0;
+
+    const sameSign=slopes.length?slopes.filter(v=>v>0).length/slopes.length:0;
+    const signConsistency = slopes.length ? Math.max(sameSign,1-sameSign) : 0.35;
+    const slopeAgreement = (localSlope>0 && regSlope>0) ? Math.min(localSlope,regSlope)/Math.max(localSlope,regSlope) : (localSlope>0?0.55:0.20);
+    const nScore=Math.min(1,Math.max(0,(n-1)/3));
+    const r2=clamp01(fit?.r2||0);
+    // Model Evidence v3: strength/consistency of evidence supporting RUL.
+    const r2Score=clamp01(r2||0);
+    const trendScore=clamp01(signConsistency||0);
+    const slopeScore=clamp01(slopeAgreement||0);
+    const persistScore=clamp01(persistenceScore||0);
+    let dataQuantityScore=0.20;
+    if(n<=0) dataQuantityScore=0.20;
+    else if(n===1) dataQuantityScore=0.55;
+    else if(n===2) dataQuantityScore=0.72;
+    else if(n===3) dataQuantityScore=0.85;
+    else dataQuantityScore=1.00;
+    const evidenceScore=0.40*r2Score+0.25*trendScore+0.20*slopeScore+0.15*persistScore;
+    let confidence=0.30*r2Score+0.20*trendScore+0.15*slopeScore+0.15*persistScore+0.10*dataQuantityScore+0.10*evidenceScore;
+    if(evidenceScore>=0.55) confidence=Math.max(confidence,0.62);
+    if(evidenceScore>=0.65) confidence=Math.max(confidence,0.70);
+    if(evidenceScore>=0.75) confidence=Math.max(confidence,0.78);
+    if(evidenceScore>=0.85) confidence=Math.max(confidence,0.86);
+    if(evidenceScore>=0.92) confidence=Math.max(confidence,0.92);
+    if(n>=3 && trendScore>=0.65 && persistScore>=0.50) confidence=Math.max(confidence,0.72);
+    if(n>=3 && trendScore>=0.75 && slopeScore>=0.60 && persistScore>=0.60) confidence=Math.max(confidence,0.80);
+    if(n>=4 && trendScore>=0.80 && slopeScore>=0.70 && persistScore>=0.70 && r2Score>=0.50) confidence=Math.max(confidence,0.88);
+    if(n<=1 && r2Score<0.30 && trendScore<0.50) confidence=Math.min(confidence,0.60);
+    confidence=clamp01(confidence);
+    confidence=Math.min(confidence,0.95);
+
+    let rul=PRECISION_V30.fallbackRUL;
+    let basis='fallback';
+    let directCritical=false;
+    if(current>=threshold){
+        directCritical=true;
+        if(slopeForRUL>0){
+            // Time-after-threshold. Hanya dipakai sebagai risk/RUL proxy jika
+            // evidence persistent; angka tidak dianggap failure date absolut.
+            const excess=current-threshold;
+            const hmAfter=excess/slopeForRUL;
+            rul=Math.max(50,Math.min(800,hmAfter*4.0));
+            basis='time-after-limit';
+        }else{
+            rul=confidence>=PRECISION_V30.strongConfidence?250:1000;
+            basis='limit-reached-no-slope';
+        }
+    }else if(slopeForRUL>0){
+        const raw=(threshold-current)/slopeForRUL;
+        rul=Math.max(0,Math.min(PRECISION_V30.maxRUL,raw));
+        basis='local+regression';
+    }else{
+        rul=PRECISION_V30.fallbackRUL;
+        basis='no-positive-trend';
+    }
+
+    // SAFETY/CONSISTENCY GATE: current value masih di bawah threshold tidak
+    // boleh menghasilkan RUL 0 hanya karena intercept regresi buruk.
+    if(current<threshold && rul<=0){
+        const fallbackSlope=Math.max(latestSlope,weightedSlope,medSlope);
+        rul=fallbackSlope>0 ? Math.min(PRECISION_V30.maxRUL,(threshold-current)/fallbackSlope) : PRECISION_V30.fallbackRUL;
+        basis='anchored-slope-fix';
+    }
+
+    return {param,current,warnThreshold,threshold,n,slopes,latestSlope,weightedSlope,regSlope,slopeForRUL,r2,signConsistency,slopeAgreement,persistenceCount,persistenceScore,confidence,rul,basis,directCritical};
+}
+
+function buildPrecisionEngineV30(histori,vol,thr,wearData){
+    const eff=getHistoriPostOilChange(histori,vol);
+    const fits={
+        fe:wearData?.fitFe,
+        p6:wearData?.fitP6,
+        pqx:wearData?.fitPQX,
+        p14:dualRegressionFit(eff.map(h=>h.hm),eff.map(h=>koreksiDilusi(h.p14||0,h.topup,vol))),
+        oks:dualRegressionFit(eff.map(h=>h.hm),eff.map(h=>koreksiDilusi(h.oks||0,h.topup,vol)))
+    };
+    const defs=[
+        ['p6',thr.p6Warn,thr.p6Crit,0.35],
+        ['fe',thr.feWarn,thr.feCrit,0.35],
+        ['pqx',thr.pqxWarn,thr.pqxCrit,0.15],
+        ['p14',thr.p14Warn,thr.p14Crit,0.15],
+        ['oks',thr.oksWarn,thr.oksCrit,0.00]
+    ];
+    const params={};
+    defs.forEach(([p,warn,t,w])=>params[p]=precisionParamForecast(eff,p,vol,warn,t,fits[p]));
+
+    const mechanical=defs.filter(x=>x[3]>0).map(([p,warn,t,w])=>params[p]);
+    const weighted=mechanical.filter(x=>x.confidence>=PRECISION_V30.minConfidenceForRUL && x.rul<PRECISION_V30.maxRUL+1);
+    let consensus=PRECISION_V30.fallbackRUL;
+    if(weighted.length){
+        let num=0,den=0;
+        weighted.forEach(x=>{
+            const def=defs.find(d=>d[0]===x.param);
+            const w=def?def[3]:0.1;
+            const cw=w*(0.35+0.65*x.confidence);
+            num+=x.rul*cw; den+=cw;
+        });
+        consensus=den?num/den:PRECISION_V30.fallbackRUL;
+        const strong=weighted.filter(x=>x.confidence>=PRECISION_V30.strongConfidence);
+        if(strong.length){
+            const minStrong=Math.min(...strong.map(x=>x.rul));
+            consensus=Math.min(consensus,minStrong*1.15);
+        }
+    }
+    consensus=Math.max(0,Math.min(PRECISION_V30.maxRUL,consensus));
+
+    // Current-state evidence.
+    const t0=histori[0]||{};
+    const countWarn=[
+        Number(t0.p6)>=thr.p6Warn,
+        Number(t0.fe)>=thr.feWarn,
+        Number(t0.p14)>=thr.p14Warn,
+        Number(t0.pqx)>=thr.pqxWarn,
+        Number(t0.oks)>=thr.oksWarn,
+        parseISOMax(t0.iso)>=thr.isoWarn
+    ].filter(Boolean).length;
+    const countCrit=[
+        Number(t0.p6)>=thr.p6Crit,
+        Number(t0.fe)>=thr.feCrit,
+        Number(t0.p14)>=thr.p14Crit,
+        Number(t0.pqx)>=thr.pqxCrit,
+        Number(t0.oks)>=thr.oksCrit,
+        parseISOMax(t0.iso)>=thr.isoCrit
+    ].filter(Boolean).length;
+    const rising=mechanical.filter(x=>x.latestSlope>0 && x.slopeForRUL>0).length;
+    const strongRising=mechanical.filter(x=>x.confidence>=0.65 && x.latestSlope>0).length;
+    const cross=clamp01((countWarn/6)*0.45 + (rising/4)*0.25 + (countCrit/3)*0.30);
+    const avgConf=mechanical.length?mechanical.reduce((s,x)=>s+x.confidence,0)/mechanical.length:0;
+    const confidence=clamp01(avgConf*0.55 + cross*0.45);
+
+    // RISK V36: confidence statistik TIDAK lagi menaikkan risk.
+    // Risk hanya mengikuti evidence kondisi + trend aktual. Confidence tetap
+    // disimpan untuk guardrail RUL/diagnostik internal, bukan sebagai proxy
+    // kesehatan komponen.
+    let risk=0;
+    risk += Math.min(35,countCrit*22);
+    risk += Math.min(30,countWarn*9);
+    risk += Math.min(25,rising*6);
+    risk=Math.max(0,Math.min(100,risk));
+    const riskLabel=risk>=70?'HIGH':risk>=40?'MEDIUM':'LOW';
+
+    const directCritical=Object.values(params).some(x=>x.directCritical);
+    const dominant=[...mechanical].sort((a,b)=>a.rul-b.rul)[0]||null;
+    const overrideSuggested=(consensus>0 && confidence>=0.55 && (dominant?.rul||5000) > 0);
+    const notes=[];
+    if(countCrit===0 && consensus<=50) notes.push('RUL sangat pendek tetapi belum ada parameter melewati critical threshold source; perlu re-check sampling/trend sebelum menyatakan failure imminent.');
+    if(countWarn>=2 && rising>=2) notes.push('≥2 parameter warning + tren naik terkonfirmasi lintas parameter.');
+    if(countCrit>0) notes.push('Ada parameter melewati critical threshold source.');
+    if(weighted.length<2) notes.push('RUL consensus bertumpu pada sedikit parameter reliable.');
+
+    return {params,consensus,confidence,risk,riskLabel,countWarn,countCrit,rising,strongRising,cross,directCritical,dominant,overrideSuggested,notes,effectivePoints:eff.length};
+}
+
 function analisaKesehatanUnit(histori, unitId) {
     const vol = histori[0]?.volOli || 80;
     // Gunakan auto-calc (selisih HM/hari antar sampling) sebagai prioritas utama
@@ -1561,10 +1796,10 @@ function analisaKesehatanUnit(histori, unitId) {
 
     // ─── KLASIFIKASI STATUS ───────────────────────────────────────────────────
     let cls, txt;
-    // v13.0: Range baru — Normal ≥70%, Caution 40–69%, Critical <40%
-    if(score >= 70)       { cls = "normal";   txt = "Normal"; }
-    else if(score >= 40)  { cls = "caution";  txt = "Caution"; }
-    else                  { cls = "critical"; txt = "Critical"; }
+    // v39: Health Index range — Normal >55%, Caution 30–55%, Critical <30%
+    if(score > 55)        { cls = "normal";   txt = "Normal"; }
+    else if(score >= 30) { cls = "caution";  txt = "Caution"; }
+    else                 { cls = "critical"; txt = "Critical"; }
 
     // ─── RUL CALCULATION v11 — Dual Regression + Confidence Interval ─────────
     // Setiap parameter dihitung waktu-ke-threshold dengan model terbaik (linear/exp)
@@ -1741,7 +1976,7 @@ function analisaKesehatanUnit(histori, unitId) {
     // C77053: SinC 0.896 → predHM=12849 vs actual=12848.9 errHM=+0.1h
     // C77054: SinD 0.96(i01+i12) → predHM=13888 vs actual=13887.5 errHM=+0.5h
     // Rata-rata |errHM| = 0.3h pada 5 case (sebelumnya bisa >500h di C77054).
-    // RATA-RATA: MAE=5.2h, AKURASI=99.96%, CI ±30% berhasil capture semua 5/5 kasus
+    // RATA-RATA: MAE=5.2h, AKURASI=Historical 5/5, CI ±30% berhasil capture semua 5/5 kasus
     // v26.1 FIX: TAC_FAKTOR dikembalikan ke 5.06 (dari 5.135 di v25).
     // Alasan 5.135 dipilih di v25: menyeimbangkan errHM vs errDay untuk C77049
     // SAAT jamHari masih dihitung dengan median murni. Setelah hitungJamHariOtomatis
@@ -2172,8 +2407,57 @@ function analisaKesehatanUnit(histori, unitId) {
     ciLow  = Math.min(ciLow,  hoursToCritFe);
     ciHigh = Math.max(ciHigh, hoursToCritFe);
 
+    // ─── PRECISION SANITY GATE v30 ─────────────────────────────────────────
+    // Gunakan engine baru sebagai guardrail, bukan pengganti total kalibrasi
+    // historical. Fokus utama: mencegah single-parameter false zero-RUL.
+    const precisionV30 = buildPrecisionEngineV30(histori, vol, thr, wearData);
+    const legacyRULBeforeV30 = Math.max(0, hoursToCritFe);
+    if(precisionV30.overrideSuggested){
+        // Jika legacy menghasilkan RUL sangat kecil tetapi precision layer
+        // menunjukkan consensus jauh lebih panjang dan confidence cukup,
+        // gunakan blend konservatif. Jika legacy=0 dan tidak ada direct critical
+        // source, precision menjadi penentu agar regresi/intercept tidak palsu.
+        if(legacyRULBeforeV30 <= 0 && !precisionV30.directCritical){
+            hoursToCritFe = precisionV30.consensus;
+        } else if(!precisionV30.directCritical && legacyRULBeforeV30 > 0 &&
+                  legacyRULBeforeV30 < precisionV30.consensus * PRECISION_V30.overrideRatio){
+            hoursToCritFe = legacyRULBeforeV30*0.35 + precisionV30.consensus*0.65;
+        }
+    }
+    // CI minimum: confidence rendah tidak boleh menampilkan band palsu sempit.
+    if(precisionV30.confidence < 0.55){
+        ciLow = Math.min(ciLow, hoursToCritFe*0.60);
+        ciHigh = Math.max(ciHigh, hoursToCritFe*1.60);
+    }
     const rul = Math.max(0, hoursToCritFe);
-    // v28.2 FIX BUG KRITIS: predHM SEMENTARA dihitung di sini sebagai PLACEHOLDER
+
+    // ─── HEALTH INDEX V40 — CONDITION + AGE BASELINE ───────────────────────
+    // V40 memisahkan Health Index dari Prediction Urgency.
+    // Health Index = kondisi transmission saat ini.
+    // Prediction Urgency = kedekatan forecast terhadap critical point.
+    // RUL / tanggal prediksi TIDAK lagi menurunkan Health Index.
+    const DESIGN_LIFE_HM = 25000;
+    const transmissionAge = Math.max(0, age);
+    const ageRatio = clamp01(transmissionAge / DESIGN_LIFE_HM);
+    const MAX_AGE_PENALTY = 20;
+    const agePenalty = MAX_AGE_PENALTY * Math.pow(ageRatio, 1.15);
+    const conditionScore = score;
+    const healthScoreFinal = Math.max(0, Math.min(100, conditionScore - agePenalty));
+    score = healthScoreFinal;
+    const healthIndex = healthScoreFinal;
+
+    breakdown.push({
+        label:"Health Index — Transmission Age",
+        val:`Age ${transmissionAge.toFixed(0)} HM`,
+        pen:Math.max(0, Math.round(agePenalty)),
+        limit:`Design life ${DESIGN_LIFE_HM.toLocaleString('id-ID')} HM`
+    });
+
+    if(score > 55)        { cls = "normal";  txt = "Normal"; }
+    else if(score >= 30) { cls = "caution"; txt = "Caution"; }
+    else                 { cls = "critical"; txt = "Critical"; }
+
+    // v28.2 FIX KRITIS: predHM SEMENTARA dihitung di sini sebagai PLACEHOLDER
     // (akan di-overwrite di bawah setelah rulRemaining diketahui). Variabel ini
     // dideklarasikan lebih awal HANYA agar urutan kode di bawah tidak perlu
     // direstruktur total — nilai final yang dipakai adalah hasil override di akhir.
@@ -2229,54 +2513,46 @@ function analisaKesehatanUnit(histori, unitId) {
         : new Date(actualToday.getTime() + daysToCrit * 86400000);
     const predDateStr     = predDate.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
 
-    // ─── v28.3 FIX BUG KRITIS: SCORE vs RUL KONTRADIKSI ──────────────────────
-    // SEBELUM: score/cls (Normal/Caution/Critical) dihitung HANYA dari nilai
-    // parameter oli SAAT SAMPLING (P6/Fe/P14/dst), TIDAK PERNAH memeriksa RUL
-    // atau daysToCrit. Akibatnya bisa muncul kontradiksi nyata: score=85%
-    // "Normal" padahal daysToCrit cuma 0.5 hari (predDate = besok) — karena
-    // hmDisplay (HM live) sudah jauh melewati hmSinceSample sejak sampling,
-    // sehingga rulRemaining sudah sangat kecil walau parameter oli T-0 masih
-    // tampak aman. Kasus nyata: C77068, TAC aktif (Oxidation critical),
-    // rul=200h, tapi rulRemaining=6.4h karena hmDisplay-liveHM=193.6h.
-    //
-    // FIX: tambahkan penalti score berbasis daysToCrit (RUL tersisa dalam
-    // HARI, satuan yang konsisten lintas unit dgn jamHari berbeda-beda).
-    // Penalti ini DITAMBAHKAN ke score yang sudah dihitung dari parameter,
-    // bukan menggantikannya — kombinasi "score turun proporsional RUL" +
-    // "badge peringatan terpisah" sesuai keputusan eksplisit.
-    let penRUL = 0;
-    let rulUrgencyFlag = null;
-    if(daysToCrit <= 3) {
-        penRUL = 40;
-        rulUrgencyFlag = { k: `RUL ≤${Math.ceil(daysToCrit)}d`, s: "CRITICAL", c: "rf-crit" };
-    } else if(daysToCrit <= 7) {
-        penRUL = 25;
-        rulUrgencyFlag = { k: `RUL ≤${Math.ceil(daysToCrit)}d`, s: "CAUTION", c: "rf-warn" };
+    // ─── V40: PREDICTION URGENCY — TERPISAH DARI HEALTH INDEX ─────────────
+    // Forecast yang dekat TIDAK mengubah score/cls Health Index.
+    // Kombinasi "Health Normal + Prediction High" adalah kondisi valid.
+    let predictionUrgency = "MONITOR";
+    let predictionUrgencyClass = "monitor";
+    let predictionAction = "Monitoring rutin";
+
+    if(isOverdue || daysToCrit <= 14) {
+        predictionUrgency = "URGENT";
+        predictionUrgencyClass = "urgent";
+        predictionAction = "Immediate inspection + replacement planning";
+    } else if(daysToCrit <= 30) {
+        predictionUrgency = "HIGH";
+        predictionUrgencyClass = "high";
+        predictionAction = "Confirmatory SOS + prepare replacement";
+    } else if(daysToCrit <= 90) {
+        predictionUrgency = "WATCH";
+        predictionUrgencyClass = "watch";
+        predictionAction = "Trend monitoring + early inspection";
+    }
+
+    // Conflict flag: kondisi sekarang sehat, tetapi forecast dekat.
+    // Ini bukan berarti Health Index salah; forecast perlu divalidasi agar
+    // tidak terlewat oleh operator karena melihat indikator hijau.
+    const predictionConflict = !isOverdue && score > 55 && daysToCrit <= 30;
+    if(predictionConflict) {
+        predictionAction = "Validate prediction: SOS confirmation + prepare";
+    }
+
+    if(isOverdue) {
+        flags.push({k:`PRED OVERDUE ${overdueBy.toFixed(0)}h`,s:"URGENT",c:"rf-crit"});
     } else if(daysToCrit <= 14) {
-        penRUL = 10;
-        rulUrgencyFlag = { k: `RUL ≤${Math.ceil(daysToCrit)}d`, s: "TREND", c: "rf-warn" };
+        flags.push({k:`PRED ≤${Math.ceil(daysToCrit)}d`,s:"URGENT",c:"rf-crit"});
+    } else if(daysToCrit <= 30) {
+        flags.push({k:`PRED ≤${Math.ceil(daysToCrit)}d`,s:"HIGH",c:"rf-warn"});
+    } else if(daysToCrit <= 90) {
+        flags.push({k:`PRED ≤${Math.ceil(daysToCrit)}d`,s:"WATCH",c:"rf-warn"});
     }
-    if(penRUL > 0) {
-        score = Math.max(0, Math.min(100, score - penRUL));
-        breakdown.push({label:`⏱ RUL Urgency (${daysToCrit.toFixed(1)}d tersisa)`, val:`-${penRUL}`, pen:penRUL, limit:""});
-        flags.push(rulUrgencyFlag);
-        // Re-evaluasi klasifikasi SETELAH penalti RUL — pakai threshold sama
-        // (Normal ≥70, Caution 40-69, Critical <40) supaya konsisten.
-        if(score >= 70)       { cls = "normal";   txt = "Normal"; }
-        else if(score >= 40)  { cls = "caution";  txt = "Caution"; }
-        else                  { cls = "critical"; txt = "Critical"; }
-    }
-    // v28.3 OVERRIDE PAKSA: RUL ≤3 hari WAJIB Critical, apa pun skor akhirnya.
-    // Alasan: penalti skor (di atas) bisa "diselamatkan" oleh parameter lain
-    // yang kebetulan sangat sehat — secara matematis selalu ada kombinasi
-    // (TAC aktif + parameter lain bersih) yang lolos cuma jadi Caution,
-    // padahal unit akan gagal BESOK. RUL ≤3 hari adalah fakta operasional
-    // langsung (bukan proxy/estimasi seperti skor parameter oli), sehingga
-    // tidak relevan diperdebatkan dengan skor komposit — begitu RUL sedekat
-    // ini, klasifikasi HARUS Critical agar tidak membingungkan di lapangan.
-    if(daysToCrit <= 3 && cls !== "critical") {
-        cls = "critical"; txt = "Critical";
-        score = Math.min(score, 39); // konsisten dgn ambang Critical (<40)
+    if(predictionConflict) {
+        flags.push({k:"HEALTHY NOW / PRED SOON",s:"VALIDATE",c:"rf-warn"});
     }
 
     // v28.2 FIX BUG KRITIS: predHM HARUS pakai basis HM yang SAMA dengan
@@ -2371,7 +2647,20 @@ function analisaKesehatanUnit(histori, unitId) {
         oilAge, oilAgeModifier, oilAgeWarning,
         rawVals: { fe, p6, p14, oks, pqx, isoMax },
         ciLow: Math.max(0, ciLow), ciHigh, ahhw,
-        rulFe, rulP6, rulPQX
+        rulFe, rulP6, rulPQX,
+        precisionV30,
+        healthIndex: score,
+        conditionScore,
+        transmissionAge,
+        agePenalty,
+        predictionUrgency,
+        predictionUrgencyClass,
+        predictionAction,
+        predictionConflict,
+        daysToCrit,
+        lifeRatio: clamp01(rulRemaining / Math.max(1, DESIGN_LIFE_HM - transmissionAge)),
+        remainingDesignLife: Math.max(1, DESIGN_LIFE_HM - transmissionAge),
+        legacyRULBeforeV30
     };
 }
 
@@ -2416,7 +2705,7 @@ function renderDashboard() {
         const t2 = histori[2]||{};
         const vol = t0.volOli || 80;
 
-        const gaugeColor = u.isReset ? '#a855f7' : (u.score >= 70 ? '#10b981' : (u.score >= 40 ? '#f59e0b' : '#f43f5e')); // v13.0: Normal≥70 Caution≥40 Critical<40
+        const gaugeColor = u.isReset ? '#a855f7' : (u.score > 55 ? '#10b981' : (u.score >= 30 ? '#f59e0b' : '#f43f5e')); // v39: Normal>55 Caution≥30 Critical<30
 
         // Trend color helper
         function tc(trend) {
@@ -2478,6 +2767,11 @@ function renderDashboard() {
         const dominantModel = expCount >= 2 ? 'EXP' : (expCount === 1 ? 'HYBRID' : 'LIN');
         const domColor = dominantModel==='EXP'?'#a855f7':dominantModel==='HYBRID'?'#f59e0b':'#38bdf8';
         // CI display
+        const p30 = u.precisionV30 || {confidence:0,risk:0,riskLabel:'LOW',cross:0,countWarn:0,countCrit:0,rising:0,dominant:null,consensus:u.rul,notes:[]};
+        const p30ConfPct = (p30.confidence*100).toFixed(0);
+        const p30Class = p30.confidence>=0.65?'pchip-high':(p30.confidence>=0.45?'pchip-med':'pchip-low');
+        const p30RiskClass = p30.risk>=70?'evidence-bad':(p30.risk>=40?'evidence-warn':'evidence-good');
+        const p30Dominant = p30.dominant ? p30.dominant.param.toUpperCase() : '—';
         const ciLowH  = u.ciLow  !== undefined ? u.ciLow.toFixed(0)  : u.rul.toFixed(0);
         const ciHighH = u.ciHigh !== undefined ? u.ciHigh.toFixed(0) : u.rul.toFixed(0);
         // v28.2 FIX BUG KRITIS: ciLowHM/ciHighHM HARUS pakai basis yang SAMA
@@ -2518,6 +2812,10 @@ function renderDashboard() {
         // v20: tampilkan tanggal + range CI ±30% untuk komunikasikan uncertainty
         const predDtTxt  = u.isReset ? 'New Comp'
             : (u.predDate + (u.predDateRange ? `<br><span style="font-size:8px;color:#64748b;">Range: ${u.predDateRange}</span>` : ''));
+        const urgencyBg = u.predictionUrgencyClass==='urgent' ? 'rgba(244,63,94,0.16)' : u.predictionUrgencyClass==='high' ? 'rgba(245,158,11,0.16)' : u.predictionUrgencyClass==='watch' ? 'rgba(245,158,11,0.10)' : 'rgba(16,185,129,0.10)';
+        const urgencyFg = u.predictionUrgencyClass==='urgent' ? '#f43f5e' : u.predictionUrgencyClass==='high' ? '#f59e0b' : u.predictionUrgencyClass==='watch' ? '#f59e0b' : '#10b981';
+        const urgencyBorder = u.predictionUrgencyClass==='urgent' ? 'rgba(244,63,94,0.45)' : u.predictionUrgencyClass==='high' ? 'rgba(245,158,11,0.45)' : u.predictionUrgencyClass==='watch' ? 'rgba(245,158,11,0.30)' : 'rgba(16,185,129,0.30)';
+        const predictionUrgencyBadge = u.isReset ? '' : `<span title="Prediction Urgency terpisah dari Health Index. HI = kondisi saat ini; Urgency = kedekatan terhadap predicted critical point." style="background:${urgencyBg};color:${urgencyFg};border:1px solid ${urgencyBorder};font-size:7px;padding:2px 6px;border-radius:4px;font-weight:900;margin-left:4px;">PRED ${u.predictionUrgency}</span>`;
         // v20: tampilkan jamHariEff (bisa live-blend jika ada update HM) vs histori
         const jamEffLabel = (u.jamHariSrc === 'live-blend')
             ? `<span style="color:#a855f7;font-weight:700;">${(u.jamHariEff||u.jamHari||15).toFixed(2)}h/hari</span><span style="color:#475569;"> (live-blend)</span>`
@@ -2599,13 +2897,14 @@ function renderDashboard() {
                     <span class="live-tag">&#9654; HM Update Aktual: ${Number(u.hmDisplay).toFixed(1)} h</span>
                     <span class="age-tag">Transmission Lifetime: ${u.age.toFixed(0)} h</span>
                     <span class="ops-tag">${jamEffLabel} | Wear Rate: ${u.wearData.wr.toFixed(4)}/h</span>
+                    <div class="precision-mini"><span>Evidence:</span><span class="pchip ${p30Class}">${p30.countCrit} critical · ${p30.countWarn} warning · ${p30.rising} rising</span><span class="${p30RiskClass}">${p30.riskLabel} risk</span></div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
-                    <div class="circular-gauge" data-value="${u.score.toFixed(0)}%" style="background:conic-gradient(${gaugeColor} 0% ${u.score.toFixed(1)}%, rgba(255,255,255,0.04) ${u.score.toFixed(1)}% 100%);" title="Normal ≥70% | Caution 40–69% | Critical <40%"></div>
+                    <div class="circular-gauge" data-value="${u.score.toFixed(0)}%" style="background:conic-gradient(${gaugeColor} 0% ${u.score.toFixed(1)}%, rgba(255,255,255,0.04) ${u.score.toFixed(1)}% 100%);" title="Normal >55% | Caution 30–55% | Critical <30%"></div>
                     <div style="font-size:7px;color:#475569;text-align:center;line-height:1.3;white-space:nowrap;">
-                        <span style="color:#10b981;">●</span>≥70 
-                        <span style="color:#f59e0b;">●</span>40-69 
-                        <span style="color:#f43f5e;">●</span>&lt;40
+                        <span style="color:#10b981;">●</span>&gt;55 
+                        <span style="color:#f59e0b;">●</span>30-55 
+                        <span style="color:#f43f5e;">●</span>&lt;30
                     </div>
                 </div>
             </div>
@@ -2613,6 +2912,7 @@ function renderDashboard() {
             <div class="predictive-summary">
                 <div><span>Wear Rate:</span> <strong>${u.wearData.wr.toFixed(4)} Fe-eq/h</strong> <span style="color:${r2color};font-size:8px;">R&#178;=${r2pct}%</span> <span style="color:${domColor};font-size:8px;font-weight:800;">[${dominantModel}]</span>${oilResetBadge}</div>
                 <div><span>Model Fit:</span> <span style="font-size:9px;">LIN R&#178;=<strong style="color:#38bdf8;">${r2LinPct}%</strong> | EXP R&#178;=<strong style="color:#a855f7;">${r2ExpPct}%</strong></span></div>
+                <div><span>Evidence:</span> <span style="font-size:8px;font-weight:800;color:#cbd5e1;">${p30.countWarn} warning · ${p30.countCrit} critical · ${p30.rising} rising</span> <span style="color:#64748b;font-size:8px;">| dominant: ${p30Dominant}</span></div>
                 <div><span>Usia Oli:</span> ${(() => {
                     if(u.oilAge === null || u.oilAge === undefined) return '<span style="color:#64748b;font-size:9px;">—</span>';
                     const pct = Math.min(100,(u.oilAge/1000)*100);
@@ -2634,6 +2934,8 @@ function renderDashboard() {
                 })()}</span></div>
                 <div><span>Predict HM Fail:</span> <span class="${failClass}">${predHMTxt}</span>${u.isOverdue ? ` <span title="HM live sudah melewati titik kritis dari basis SOS — segera lakukan inspeksi fisik/SOS ulang" style="background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.5);font-size:7px;padding:1px 5px;border-radius:3px;font-weight:800;">⚠ OVERDUE +${u.overdueBy.toFixed(0)}h</span>` : ''}</div>
                 <div><span>Predict Tgl Fail:</span> <span class="${failClass}" style="line-height:1.5;">${predDtTxt}</span></div>
+                <div><span>Prediction Urgency:</span> ${predictionUrgencyBadge} <span style="font-size:8px;color:#94a3b8;">${u.predictionAction}</span></div>
+                ${u.predictionConflict ? `<div style="font-size:8px;padding:4px 6px;border-radius:4px;margin:2px 0;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;line-height:1.4;">⚠ <strong>HEALTHY NOW / PREDICTION SOON:</strong> Health Index tetap menggambarkan kondisi saat ini. Forecast dekat harus divalidasi dengan SOS/engineering review agar tidak terlewat.</div>` : ''}
             </div>
             <div style="display:flex;gap:6px;margin-bottom:6px;">
                 <div style="flex:1;"><div class="trend-section-title">Trend Fe</div><div class="trend-bar-row">${feBarHtml}</div></div>
@@ -2672,13 +2974,13 @@ function renderDashboard() {
                     <span style="font-weight:800;color:${gaugeColor};">${u.score.toFixed(1)}</span>
                 </div>
                 <div style="margin-top:5px;padding:4px 6px;border-radius:4px;background:rgba(255,255,255,0.03);font-size:8px;display:flex;justify-content:space-between;">
-                    <span style="color:#10b981;font-weight:700;">■ Normal ≥70</span>
-                    <span style="color:#f59e0b;font-weight:700;">■ Caution 40–69</span>
-                    <span style="color:#f43f5e;font-weight:700;">■ Critical &lt;40</span>
+                    <span style="color:#10b981;font-weight:700;">■ Normal &gt;55</span>
+                    <span style="color:#f59e0b;font-weight:700;">■ Caution 30–55</span>
+                    <span style="color:#f43f5e;font-weight:700;">■ Critical &lt;30</span>
                 </div>
             </div>
             <div class="score-breakdown" style="margin-top:5px;">
-                <div class="score-breakdown-title">&#128208; Dual Regression RUL Breakdown v13.0 — Wear Limit Final 8 Case</div>
+                <div class="score-breakdown-title">&#128208; Dual Regression RUL Breakdown v30.0 — Source Wear Limit + Precision Guardrail</div>
                 ${u.wearData.oilChangeReset ? `<div class="score-row" style="color:#38bdf8;font-size:8px;margin-bottom:4px;">
                     ${u.wearData.oilChangeAtT0
                         ? '🔵 <strong>T-0 = GANTI OLI (FRESH)</strong> — Sampel T-0 diambil saat/tepat setelah PS. Regresi menunggu SOS berikutnya (fallback estimate aktif).'
@@ -2694,6 +2996,20 @@ function renderDashboard() {
                 <div class="score-row"><span style="color:#64748b;">CI Band ±&#963;</span><span style="color:#94a3b8;">${ciLowH}h – ${ciHighH}h</span></div>
                 <div class="score-row"><span style="color:#64748b;">Linear R&#178; avg</span><span style="color:#38bdf8;">${r2LinPct}%</span></div>
                 <div class="score-row"><span style="color:#64748b;">Exponential R&#178; avg</span><span style="color:#a855f7;">${r2ExpPct}%</span></div>
+            </div>
+            <div class="precision-panel">
+                <div class="precision-title">🎯 Precision Engine v30 — Evidence & Confidence</div>
+                <div class="precision-grid">
+                    <span>Risk Evidence</span><span class="${p30RiskClass}">${p30.riskLabel} (${p30.risk.toFixed(0)}/100)</span>
+                    <span>Prognostic Confidence</span><span>${p30ConfPct}%</span>
+                    <span>Cross-Parameter Confirmation</span><span>${(p30.cross*100).toFixed(0)}%</span>
+                    <span>Warning / Critical</span><span>${p30.countWarn} / ${p30.countCrit}</span>
+                    <span>Positive Mechanical Trends</span><span>${p30.rising}</span>
+                    <span>Consensus RUL</span><span>${p30.consensus.toFixed(0)} h</span>
+                    <span>Dominant RUL Driver</span><span>${p30Dominant}</span>
+                </div>
+                <div class="model-audit"><strong>Guardrail:</strong> nilai parameter yang masih di bawah threshold tidak boleh menghasilkan RUL 0 hanya karena intercept regresi. Forecast menggunakan local slope + regression slope, persistence, dan cross-parameter confirmation.</div>
+                ${p30.notes && p30.notes.length ? `<div class="precision-note">${p30.notes.map(n=>'• '+n).join('<br>')}</div>` : ''}
             </div>
             <div class="ai-rec-box"><strong style="color:#f59e0b;">Rekomendasi:</strong><br>${u.rec}</div>`;
         detailStore[id] = { html: detailHtml, title: id + ' — ' + u.txt + ' | Score: ' + u.score.toFixed(1) };
