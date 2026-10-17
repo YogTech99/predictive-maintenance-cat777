@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predictive Maintenance Dashboard - PPA ADW v31.0 Critical Evidence</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body, html { margin: 0; padding: 0; height: 100vh; background-color: #0b0f17; color: #f1f5f9; overflow: hidden; }
@@ -266,12 +267,12 @@
         <h2>PT Putra Perkasa Abadi</h2>
         <p>Site Adaro Indonesia — ADW</p>
         <div class="input-div">
-            <label>NRP / Username</label>
-            <input type="text" id="username" placeholder="NRP Anda..." value="admin">
+            <label>Email akun terdaftar</label>
+            <input type="email" id="username" placeholder="nama@perusahaan.com" autocomplete="username" value="">
         </div>
         <div class="input-div">
             <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••" value="ppa123">
+            <input type="password" id="password" placeholder="Password akun" autocomplete="current-password" value="">
         </div>
         <button class="btn-login" onclick="handleLogin()">Sign In — Component Monitoring</button>
         <div class="login-credit">
@@ -457,7 +458,7 @@
         </div>
 
         <div class="footer" style="height:auto;min-height:33px;padding:5px 22px;">
-            <div>Status: <span>Local Database · Precision Engine v31 · Critical-Evidence Override · Source: Data_Update_Fix(1).xlsx</span></div>
+            <div>Status: <span id="dataSourceStatus">Database online belum dikonfigurasi · Precision Engine v31</span></div>
         </div>
     </div>
 
@@ -590,32 +591,140 @@ function toggleBacktestPanel() {
     if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 
-function handleLogin() {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    if(u === "admin" && p === "ppa123") {
+// ─── SHARED CLOUD DATABASE (Supabase) ────────────────────────────────────────
+// Isi Project URL + publishable/anon key. Jangan pernah menaruh service_role/secret key di HTML.
+const SUPABASE_URL = 'https://somkldfmijpdkohcyjsp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_jNWELqgl3j5UtntJNsGDfw_6ao_VBIX';
+const SUPABASE_TABLE = 'cat777_shared_state';
+let supabaseClient = null;
+let currentCloudUser = null;
+let realtimeChannel = null;
+let cloudWriteInProgress = false;
+let lastCloudPayloadFingerprint = '';
+
+function supabaseConfigured() {
+    return window.supabase && SUPABASE_URL.startsWith('https://') &&
+        !SUPABASE_URL.includes('YOUR_PROJECT_ID') && SUPABASE_ANON_KEY &&
+        !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_');
+}
+function initSupabaseClient() {
+    if(!supabaseConfigured()) throw new Error('Konfigurasi Supabase belum diisi pada SUPABASE_URL dan SUPABASE_ANON_KEY.');
+    if(!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    return supabaseClient;
+}
+function setCloudStatus(message, color='#10b981') {
+    const el = document.getElementById('dataSourceStatus');
+    if(el) { el.textContent = message; el.style.color = color; }
+}
+function cloudPayloadFingerprint(payload) {
+    try { return JSON.stringify(payload); } catch(e) { return ''; }
+}
+function applyCloudPayload(payload, updatedAt) {
+    if(!payload || typeof payload !== 'object') throw new Error('Payload database online tidak valid.');
+    databaseUnitHistori = JSON.parse(JSON.stringify(payload.databaseUnitHistori || {}));
+    unitJamHari = JSON.parse(JSON.stringify(payload.unitJamHari || {}));
+    unitList.forEach(u => {
+        if(!Array.isArray(databaseUnitHistori[u]) || databaseUnitHistori[u].length === 0) {
+            if(EMBEDDED_MASTER_SOS[u]) databaseUnitHistori[u] = JSON.parse(JSON.stringify(EMBEDDED_MASTER_SOS[u]));
+            else inisialisasiUnitDefault(u);
+        }
+    });
+    localStorage.setItem('database_sos_v31', JSON.stringify(databaseUnitHistori));
+    localStorage.setItem('unit_jam_hari_v31', JSON.stringify(unitJamHari));
+    lastCloudPayloadFingerprint = cloudPayloadFingerprint({databaseUnitHistori, unitJamHari});
+    try { renderDashboard(); sinkronisasiFormSimulasi(); } catch(e) { console.error('Render cloud data:', e); }
+    const timeLabel = updatedAt ? new Date(updatedAt).toLocaleString('id-ID') : 'waktu tidak tersedia';
+    setCloudStatus('Database online · real-time aktif · update terakhir ' + timeLabel, '#10b981');
+}
+async function loadSharedStateFromCloud() {
+    const client = initSupabaseClient();
+    setCloudStatus('Menghubungkan ke database online…', '#f59e0b');
+    const { data, error } = await client.from(SUPABASE_TABLE)
+        .select('id,payload,updated_at').eq('id', 'master').maybeSingle();
+    if(error) throw error;
+    if(data && data.payload) applyCloudPayload(data.payload, data.updated_at);
+    else {
+        loadDatabaseDariStorage(); renderDashboard(); sinkronisasiFormSimulasi();
+        setCloudStatus('Database online aktif, tetapi master belum diinisialisasi. Upload Excel master sekali.', '#f59e0b');
+    }
+}
+async function saveSharedStateToCloud(sourceLabel='Perubahan dashboard') {
+    const client = initSupabaseClient();
+    if(!currentCloudUser) throw new Error('Sesi login online tidak aktif. Silakan login ulang.');
+    if(cloudWriteInProgress) throw new Error('Penyimpanan online sedang berjalan. Tunggu sebentar lalu coba lagi.');
+    const payload = { databaseUnitHistori, unitJamHari };
+    const fingerprint = cloudPayloadFingerprint(payload);
+    cloudWriteInProgress = true;
+    try {
+        setCloudStatus('Menyimpan data ke database online…', '#f59e0b');
+        const { error } = await client.from(SUPABASE_TABLE).upsert({
+            id: 'master', payload, updated_at: new Date().toISOString(), updated_by: currentCloudUser.id
+        }, { onConflict: 'id' });
+        if(error) throw error;
+        lastCloudPayloadFingerprint = fingerprint;
+        setCloudStatus('Database online · tersimpan · real-time aktif', '#10b981');
+    } finally { cloudWriteInProgress = false; }
+}
+function subscribeSharedStateRealtime() {
+    const client = initSupabaseClient();
+    if(realtimeChannel) { client.removeChannel(realtimeChannel); realtimeChannel = null; }
+    realtimeChannel = client.channel('cat777-shared-state-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: SUPABASE_TABLE, filter: 'id=eq.master' }, event => {
+            const row = event.new;
+            if(!row || !row.payload) return;
+            if(cloudPayloadFingerprint(row.payload) === lastCloudPayloadFingerprint) return;
+            applyCloudPayload(row.payload, row.updated_at);
+            showToast('☁️ Data terbaru diterima dari perangkat lain.', false);
+        })
+        .subscribe(status => {
+            if(status === 'SUBSCRIBED') setCloudStatus('Database online · real-time aktif', '#10b981');
+            else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setCloudStatus('Koneksi real-time bermasalah; periksa konfigurasi Supabase.', '#f59e0b');
+        });
+}
+async function handleLogin() {
+    const email = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    try {
+        const client = initSupabaseClient();
+        if(!email || !password) { alert('Masukkan email dan password akun yang sudah dibuat di Supabase.'); return; }
+        setCloudStatus('Memverifikasi akun…', '#f59e0b');
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+        currentCloudUser = data.user;
         const wr = document.getElementById('loginWrapper');
         const ap = document.getElementById('appContainer');
         wr.style.opacity = '0'; wr.style.transform = 'scale(0.95)';
-        setTimeout(() => {
+        setTimeout(async () => {
             wr.style.display = 'none'; ap.style.display = 'block';
             setTimeout(() => { ap.style.opacity = '1'; }, 50);
-            loadDatabaseDariStorage(); renderDashboard(); sinkronisasiFormSimulasi();
-        }, 380);
-    } else { alert("❌ Akses Ditolak! Username atau password salah."); }
-}
-
-function handleLogout() {
-    if(confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-        const wr = document.getElementById('loginWrapper');
-        const ap = document.getElementById('appContainer');
-        ap.style.opacity = '0';
-        setTimeout(() => {
-            ap.style.display = 'none';
-            wr.style.display = 'flex';
-            setTimeout(() => { wr.style.opacity = '1'; wr.style.transform = 'scale(1)'; document.getElementById('password').value = ""; }, 50);
-        }, 380);
+            try { await loadSharedStateFromCloud(); subscribeSharedStateRealtime(); }
+            catch(cloudError) {
+                console.error('Cloud load error:', cloudError);
+                loadDatabaseDariStorage(); renderDashboard(); sinkronisasiFormSimulasi();
+                setCloudStatus('Gagal membaca database online: ' + (cloudError.message || cloudError), '#f43f5e');
+                showToast('⚠️ Database online gagal dibaca. Periksa konfigurasi/RLS.', true);
+            }
+        }, 250);
+    } catch(err) {
+        console.error('Login error:', err); setCloudStatus('Login database gagal', '#f43f5e');
+        alert('Login gagal: ' + (err.message || err) + '\nPastikan akun sudah dibuat di Supabase dan konfigurasi URL/key benar.');
     }
+}
+async function handleLogout() {
+    if(!confirm('Apakah Anda yakin ingin keluar dari sistem?')) return;
+    try {
+        if(realtimeChannel && supabaseClient) { await supabaseClient.removeChannel(realtimeChannel); realtimeChannel = null; }
+        if(supabaseClient) await supabaseClient.auth.signOut();
+    } catch(e) { console.warn('Logout cloud:', e); }
+    currentCloudUser = null;
+    const wr = document.getElementById('loginWrapper'); const ap = document.getElementById('appContainer');
+    ap.style.opacity = '0';
+    setTimeout(() => {
+        ap.style.display = 'none'; wr.style.display = 'flex';
+        setTimeout(() => { wr.style.opacity = '1'; wr.style.transform = 'scale(1)'; document.getElementById('password').value = ''; }, 50);
+    }, 300);
 }
 
 const unitList = ["C77049","C77050","C77051","C77052","C77053","C77054","C77065","C77066","C77067","C77068","C577008AMM","C577023AMM","C577024AMM","C577025AMM","C577026AMM","C577028AMM","C577030AMM","C77023","C77024","C77025","C77026","C77027","C77028","C77029","C77030","C77031","C77032","C77033","C77034"];
@@ -831,7 +940,11 @@ function updateHMHarian() {
     });
     if(updated > 0) {
         simpanKeStorage(); renderDashboard();
-        alert(`✅ HM Live diperbarui untuk ${updated} unit.`);
+        saveSharedStateToCloud('Update HM harian').then(() => showToast('☁️ HM harian tersimpan online dan tersinkron ke perangkat lain.', false)).catch(err => {
+            setCloudStatus('GAGAL sinkron HM ke database online', '#f43f5e');
+            showToast('⚠️ HM berubah lokal tetapi gagal disimpan online: ' + (err.message || err), true);
+        });
+        alert(`✅ HM Live diperbarui untuk ${updated} unit. Sinkronisasi online sedang diproses.`);
     } else {
         alert("⚠️ Format salah atau unit tidak ditemukan. Gunakan: C77052,13500;C77054,14200");
     }
@@ -3151,12 +3264,19 @@ document.getElementById('excelFileInput').addEventListener('change', function(e)
             simpanKeStorage();
             try { renderDashboard(); } catch(re) { console.error('renderDashboard error:', re); }
             try { sinkronisasiFormSimulasi(); } catch(se) { console.error('sinkronisasi error:', se); }
-            hideLoading();
-            showToast('✅ ' + rowCount + ' entri dari ' + unitCount + ' unit berhasil disinkron!', false);
-            try {
-                const dz = document.getElementById('dropZone');
-                dz.querySelector('p').innerHTML = '✅ <strong style="color:#10b981;">' + file.name + '</strong><br><span style="color:#64748b;font-size:10px;">Klik untuk ganti file</span>';
-            } catch(de) {}
+            setLoadingProgress(96, '☁️ Menyimpan ke database online...', 'Menyinkronkan agar perangkat lain menerima data terbaru');
+            saveSharedStateToCloud('Excel upload').then(() => {
+                hideLoading();
+                showToast('✅ ' + rowCount + ' entri dari ' + unitCount + ' unit tersimpan online. Perangkat lain akan menerima update real-time.', false);
+                try {
+                    const dz = document.getElementById('dropZone');
+                    dz.querySelector('p').innerHTML = '✅ <strong style="color:#10b981;">' + file.name + '</strong><br><span style="color:#64748b;font-size:10px;">Tersimpan di database online</span>';
+                } catch(de) {}
+            }).catch(cloudErr => {
+                hideLoading(); console.error('Cloud save after Excel upload:', cloudErr);
+                setCloudStatus('GAGAL sinkron ke database online · data ini hanya ada di perangkat ini', '#f43f5e');
+                showToast('⚠️ Excel terbaca, tetapi GAGAL tersimpan online: ' + (cloudErr.message || cloudErr), true);
+            });
 
         } catch(err) {
             hideLoading();
@@ -3172,6 +3292,8 @@ document.getElementById('excelFileInput').addEventListener('change', function(e)
 
     reader.readAsArrayBuffer(file);
 });
+
+// Data utama dibaca dari database Supabase bersama; file statis master-sos.xlsx tidak lagi menjadi sumber utama.
 
 // ─── DRAG & DROP ─────────────────────────────────────────────────────────────
 let dz = document.getElementById('dropZone');
@@ -3215,6 +3337,10 @@ function prosesKalkulasiManual() {
     // Jika 0, biarkan getJamHari() hitung otomatis dari histori
     if(jamH > 0) unitJamHari[id] = jamH;
     simpanKeStorage(); renderDashboard();
+    saveSharedStateToCloud('Input data manual').then(() => showToast('☁️ Input manual tersimpan online dan tersinkron.', false)).catch(err => {
+        setCloudStatus('GAGAL sinkron input manual ke database online', '#f43f5e');
+        showToast('⚠️ Input manual hanya tersimpan lokal: ' + (err.message || err), true);
+    });
 }
 
 function sinkronisasiFormSimulasi() {
