@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictive Maintenance Dashboard - PPA ADW v30.0 Precision</title>
+    <title>Predictive Maintenance Dashboard - PPA ADW v31.0 Critical Evidence</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -457,7 +457,7 @@
         </div>
 
         <div class="footer" style="height:auto;min-height:33px;padding:5px 22px;">
-            <div>Status: <span>Local Database · Precision Engine v30 · Source: Data_Update_Fix(1).xlsx</span></div>
+            <div>Status: <span>Local Database · Precision Engine v31 · Critical-Evidence Override · Source: Data_Update_Fix(1).xlsx</span></div>
         </div>
     </div>
 
@@ -2379,12 +2379,13 @@ function analisaKesehatanUnit(histori, unitId) {
     let ahhw = { active: histori.length >= 5, confidence: 'Standard',
                  agreement: null, widenFactor: ahhwCIMult, param: dominantParam, label: ahhwLabel };
     if(histori.length >= 5) {
+        // Label AHHW dibuat ringkas dan konsisten; penjelasan pola tidak ditampilkan di kartu.
         const labelMap = {
-            'hist_high_post_ps':       'Tinggi (hist kritis, unit post-PS)',
-            'sudden_rise_hist_low':    'Sedang (kenaikan mendadak, hist rendah)',
-            'both_falling_confirmed':  'Tinggi (tren turun dikonfirmasi)',
-            'both_rising_progressive': 'Tinggi (degradasi progresif)',
-            'neutral_contradicting':   'Sedang (tren tidak konsisten)',
+            'hist_high_post_ps':       'Tinggi',
+            'sudden_rise_hist_low':    'Sedang',
+            'both_falling_confirmed':  'Tinggi',
+            'both_rising_progressive': 'Tinggi',
+            'neutral_contradicting':   'Sedang',
             'standard':                'Standard',
         };
         ahhw.confidence = labelMap[ahhwLabel] || 'Standard';
@@ -2520,10 +2521,18 @@ function analisaKesehatanUnit(histori, unitId) {
     let predictionUrgencyClass = "monitor";
     let predictionAction = "Monitoring rutin";
 
-    if(isOverdue || daysToCrit <= 14) {
+    // v31: CRITICAL-EVIDENCE OVERRIDE
+    // Jika salah satu parameter SOS sudah melewati ambang kritis, urgensi
+    // inspeksi tidak boleh menunggu forecast RUL/tanggal. RUL tetap ditampilkan
+    // sebagai estimasi model; override ini hanya menaikkan urgensi tindakan.
+    // Ini mengurangi risiko kasus seperti C77034: P6 melewati ambang sejak Juli,
+    // lalu PQ/P6 melonjak pada September. Bukan perintah otomatis mengganti unit.
+    if(anyParamCritical || isOverdue || daysToCrit <= 14) {
         predictionUrgency = "URGENT";
         predictionUrgencyClass = "urgent";
-        predictionAction = "Immediate inspection + replacement planning";
+        predictionAction = anyParamCritical
+            ? "Ambang SOS kritis terlampaui — inspeksi segera + evaluasi replacement"
+            : "Immediate inspection + replacement planning";
     } else if(daysToCrit <= 30) {
         predictionUrgency = "HIGH";
         predictionUrgencyClass = "high";
